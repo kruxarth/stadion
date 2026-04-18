@@ -9,7 +9,7 @@ export function Hero() {
   const { isSignedIn } = useAuth();
 
   return (
-    <section className="relative min-h-screen flex items-center justify-center pt-14 px-4 text-center overflow-hidden">
+    <section className="relative min-h-screen flex items-center justify-center pt-14 px-4 text-center overflow-hidden bg-black">
       <div className="relative z-10 max-w-5xl mx-auto">
         {/* Marquee ticker */}
         <motion.div

@@ -3,99 +3,94 @@
 import { motion } from "framer-motion";
 import { useAuth, SignInButton } from "@clerk/nextjs";
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import { ArrowRight, GitBranch } from "lucide-react";
+import { ArrowRight, Zap } from "lucide-react";
 
 export function Hero() {
   const { isSignedIn } = useAuth();
 
   return (
-    <section className="relative min-h-screen flex items-center justify-center pt-16 px-4 text-center overflow-hidden">
-      <div className="relative z-10 max-w-4xl mx-auto">
-        {/* Badge */}
+    <section className="relative min-h-screen flex items-center justify-center pt-14 px-4 text-center overflow-hidden">
+      <div className="relative z-10 max-w-5xl mx-auto">
+        {/* Marquee ticker */}
         <motion.div
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="inline-flex items-center gap-2 rounded-full border border-[#63e4e0]/30 bg-[#63e4e0]/10 px-4 py-1.5 text-sm text-[#63e4e0] mb-8"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.3 }}
+          className="overflow-hidden border-y-2 border-[#63e4e0]/30 py-2 mb-12 -mx-4 sm:-mx-20"
         >
-          <span className="h-1.5 w-1.5 rounded-full bg-[#63e4e0] animate-pulse" />
-          Powered by C Cube
+          <div className="flex whitespace-nowrap" style={{ animation: "marquee 20s linear infinite" }}>
+            {Array.from({ length: 4 }).map((_, i) => (
+              <span key={i} className="font-mono text-xs uppercase tracking-[0.3em] text-[#63e4e0]/50 mx-8">
+                GITHUB TRACKING // LEETCODE RATINGS // CODEFORCES RANKINGS // 1v1 CHALLENGES // BADGE ENGINE // LIVE LEADERBOARD //
+              </span>
+            ))}
+          </div>
         </motion.div>
 
         {/* Headline */}
-        <motion.h1
-          initial={{ opacity: 0, y: 20 }}
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.1 }}
-          className="text-5xl sm:text-6xl md:text-7xl font-extrabold tracking-tight mb-6 leading-[1.1]"
+          transition={{ duration: 0.5, delay: 0.1 }}
         >
-          Compete.{" "}
-          <span style={{ color: "#63e4e0" }}>Code.</span>{" "}
-          Climb.
-        </motion.h1>
+          <h1 className="text-6xl sm:text-7xl md:text-8xl lg:text-9xl font-black uppercase tracking-tighter leading-[0.85] mb-4">
+            <span className="glitch-text block" data-text="OUTRANK">OUTRANK</span>
+            <span className="block text-[#63e4e0] glitch-text" data-text="EVERY">EVERY</span>
+            <span className="glitch-text block" data-text="ONE">ONE</span>
+          </h1>
+        </motion.div>
 
-        {/* Subheadline */}
+        {/* Subline */}
         <motion.p
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.2 }}
-          className="text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto mb-10 leading-relaxed"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.5, delay: 0.3 }}
+          className="font-mono text-sm sm:text-base text-white/50 max-w-xl mx-auto mb-10 uppercase tracking-wider leading-relaxed"
         >
-          The competitive coding leaderboard for college developers. Track
-          GitHub activity, LeetCode ratings, and Codeforces rankings — all in
-          one place.
+          The competitive coding arena for college devs.
+          <br className="hidden sm:block" />
+          Ship code. Climb ranks. Dominate the leaderboard.
         </motion.p>
 
         {/* CTAs */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.3 }}
+          transition={{ duration: 0.5, delay: 0.4 }}
           className="flex flex-col sm:flex-row items-center justify-center gap-4"
         >
           {!isSignedIn ? (
             <SignInButton forceRedirectUrl="/dashboard">
-              <Button
-                size="lg"
-                className="gap-2 font-semibold px-8"
-                style={{ backgroundColor: "#63e4e0", color: "#293a4e" }}
-              >
-                <GitBranch className="h-4 w-4" />
-                Login with GitHub
-              </Button>
+              <button className="brutal-border brutal-shadow brutal-hover bg-[#63e4e0] text-[#293a4e] font-mono font-black text-sm uppercase tracking-widest px-8 py-4 flex items-center gap-3 cursor-pointer">
+                <Zap className="h-5 w-5" />
+                ENTER THE ARENA
+              </button>
             </SignInButton>
           ) : (
             <Link href="/dashboard">
-              <Button
-                size="lg"
-                className="gap-2 font-semibold px-8"
-                style={{ backgroundColor: "#63e4e0", color: "#293a4e" }}
-              >
-                Go to Dashboard
-                <ArrowRight className="h-4 w-4" />
-              </Button>
+              <button className="brutal-border brutal-shadow brutal-hover bg-[#63e4e0] text-[#293a4e] font-mono font-black text-sm uppercase tracking-widest px-8 py-4 flex items-center gap-3 cursor-pointer">
+                <Zap className="h-5 w-5" />
+                GO TO DASHBOARD
+              </button>
             </Link>
           )}
 
           <Link href="/leaderboard">
-            <Button size="lg" variant="outline" className="gap-2 px-8">
-              View Leaderboard
-              <ArrowRight className="h-4 w-4" />
-            </Button>
+            <button className="brutal-border brutal-hover bg-transparent text-[#63e4e0] font-mono font-bold text-sm uppercase tracking-widest px-8 py-4 flex items-center gap-3 cursor-pointer">
+              VIEW RANKINGS
+              <ArrowRight className="h-5 w-5" />
+            </button>
           </Link>
         </motion.div>
 
-        {/* Scroll indicator */}
+        {/* Bottom accent line */}
         <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 1.2 }}
-          className="absolute -bottom-24 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1.5 text-muted-foreground/50 text-xs"
-        >
-          <span>Scroll</span>
-          <span className="h-8 w-px bg-gradient-to-b from-muted-foreground/30 to-transparent" />
-        </motion.div>
+          initial={{ scaleX: 0 }}
+          animate={{ scaleX: 1 }}
+          transition={{ delay: 0.8, duration: 0.6 }}
+          className="mt-16 h-[2px] w-48 mx-auto"
+          style={{ background: "linear-gradient(90deg, transparent, #63e4e0, transparent)" }}
+        />
       </div>
     </section>
   );

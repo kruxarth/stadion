@@ -1,6 +1,4 @@
 import { Suspense } from "react";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { LeaderboardTable } from "@/components/leaderboard/LeaderboardTable";
 import { getLeaderboard } from "@/lib/queries/leaderboard";
@@ -21,14 +19,24 @@ export default async function LeaderboardPage({ searchParams }: { searchParams: 
   return (
     <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8 space-y-6">
       <div>
-        <h1 className="text-2xl font-bold">Leaderboard</h1>
-        <p className="text-muted-foreground text-sm mt-1">Rankings across all registered members</p>
+        <div className="flex items-center gap-4 mb-2">
+          <div className="h-[2px] w-8 bg-[#63e4e0]" />
+          <span className="font-mono text-[10px] uppercase tracking-[0.3em] text-[#63e4e0]">
+            RANKINGS
+          </span>
+        </div>
+        <h1 className="font-mono font-black text-2xl uppercase tracking-tight text-white">
+          LEADERBOARD
+        </h1>
+        <p className="font-mono text-xs uppercase tracking-wider text-white/40 mt-1">
+          All registered members // sorted by Stadion Points
+        </p>
       </div>
 
       {/* Tab + filter controls — client component for URL updates */}
       <LeaderboardControls currentTab={tab} currentYear={year} />
 
-      <Suspense fallback={<Skeleton className="h-96 w-full rounded-xl" />}>
+      <Suspense fallback={<Skeleton className="h-96 w-full" />}>
         <LeaderboardTable
           users={users}
           total={total}

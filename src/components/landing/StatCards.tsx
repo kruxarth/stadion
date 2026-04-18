@@ -13,19 +13,21 @@ export function StatCards({ totalMembers, weeklyCommits, topUser }: StatCardsPro
   const stats = [
     {
       icon: Users,
-      label: "Registered Members",
+      label: "REGISTERED",
       value: totalMembers.toLocaleString(),
+      suffix: "DEVS",
     },
     {
       icon: GitCommitHorizontal,
-      label: "Commits This Week",
+      label: "THIS WEEK",
       value: weeklyCommits.toLocaleString(),
+      suffix: "COMMITS",
     },
     {
       icon: Trophy,
-      label: "Current Leader",
-      value: topUser ? `@${topUser.username}` : "—",
-      sub: topUser ? `${topUser.stadion_points.toLocaleString()} SP` : null,
+      label: "CURRENT #1",
+      value: topUser ? `@${topUser.username}` : "---",
+      suffix: topUser ? `${topUser.stadion_points.toLocaleString()} SP` : null,
     },
   ];
 
@@ -39,19 +41,22 @@ export function StatCards({ totalMembers, weeklyCommits, topUser }: StatCardsPro
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ delay: i * 0.1 }}
-            className="rounded-xl border border-border bg-card p-6 flex items-start gap-4"
+            className="brutal-border brutal-shadow brutal-hover bg-[#293a4e] p-5"
           >
-            <div
-              className="rounded-lg p-2.5 shrink-0"
-              style={{ backgroundColor: "rgba(99,228,224,0.12)" }}
-            >
-              <s.icon className="h-5 w-5" style={{ color: "#63e4e0" }} />
+            <div className="flex items-center gap-2 mb-3">
+              <s.icon className="h-4 w-4 text-[#63e4e0]" />
+              <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-white/40">
+                {s.label}
+              </span>
             </div>
-            <div>
-              <p className="text-sm text-muted-foreground">{s.label}</p>
-              <p className="text-2xl font-bold mt-0.5">{s.value}</p>
-              {s.sub && <p className="text-xs text-muted-foreground mt-0.5">{s.sub}</p>}
-            </div>
+            <p className="font-mono font-black text-3xl text-white tracking-tight">
+              {s.value}
+            </p>
+            {s.suffix && (
+              <p className="font-mono text-xs uppercase tracking-wider text-[#63e4e0] mt-1">
+                {s.suffix}
+              </p>
+            )}
           </motion.div>
         ))}
       </div>

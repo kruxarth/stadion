@@ -2,73 +2,56 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { useTheme } from "next-themes";
 import { useAuth, SignInButton, UserButton } from "@clerk/nextjs";
 import { Button } from "@/components/ui/button";
-import { Moon, Sun } from "lucide-react";
-import { useEffect, useState } from "react";
 
 export function Navbar() {
-  const { theme, setTheme } = useTheme();
   const { isSignedIn } = useAuth();
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => setMounted(true), []);
 
   return (
-    <header className="fixed top-0 inset-x-0 z-50 border-b border-border/40 bg-background/80 backdrop-blur-md">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
+    <header className="fixed top-0 inset-x-0 z-50 border-b-2 border-[#63e4e0] bg-[#293a4e]/95">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
         {/* Logo */}
-        <Link href="/" className="flex items-center gap-2.5 shrink-0">
+        <Link href="/" className="flex items-center gap-2.5 shrink-0 group">
           <Image
             src="/ccube.png"
             alt="C Cube"
-            width={32}
-            height={32}
-            className="rounded-sm"
+            width={28}
+            height={28}
+            className="rounded-none"
           />
-          <span className="font-bold text-lg tracking-tight">Stadion</span>
+          <span className="font-mono font-black text-lg tracking-widest uppercase text-white group-hover:text-[#63e4e0] transition-colors">
+            STADION
+          </span>
         </Link>
 
         {/* Nav links */}
-        <nav className="hidden md:flex items-center gap-6 text-sm text-muted-foreground">
-          <Link href="#features" className="hover:text-foreground transition-colors">
+        <nav className="hidden md:flex items-center gap-6 font-mono text-xs uppercase tracking-widest text-white/60">
+          <Link href="#features" className="hover:text-[#63e4e0] transition-colors">
             Features
           </Link>
-          <Link href="/leaderboard" className="hover:text-foreground transition-colors">
-            Leaderboard
+          <Link href="/leaderboard" className="hover:text-[#63e4e0] transition-colors">
+            Rankings
           </Link>
         </nav>
 
         {/* Right actions */}
         <div className="flex items-center gap-3">
-          {/* Theme toggle */}
-          {mounted && (
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-              aria-label="Toggle theme"
-            >
-              {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-            </Button>
-          )}
-
           {!isSignedIn ? (
             <SignInButton forceRedirectUrl="/dashboard">
-              <Button size="sm" style={{ backgroundColor: "#63e4e0", color: "#293a4e" }}>
-                Sign in with GitHub
-              </Button>
+              <button className="brutal-border brutal-shadow-sm brutal-hover bg-[#63e4e0] text-[#293a4e] font-mono font-bold text-xs uppercase tracking-wider px-4 py-2 cursor-pointer">
+                Enter Arena
+              </button>
             </SignInButton>
           ) : (
-            <>
+            <div className="flex items-center gap-3">
               <Link href="/dashboard">
-                <Button size="sm" variant="outline">
+                <button className="brutal-border brutal-hover bg-transparent text-[#63e4e0] font-mono font-bold text-xs uppercase tracking-wider px-4 py-2 cursor-pointer">
                   Dashboard
-                </Button>
+                </button>
               </Link>
               <UserButton />
-            </>
+            </div>
           )}
         </div>
       </div>

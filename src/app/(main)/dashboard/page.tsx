@@ -5,11 +5,9 @@ import { db } from "@/lib/db";
 import { users, githubStats, leetcodeStats, codeforcesStats, challenges } from "@/lib/db/schema";
 import { ensureUser } from "@/lib/ensureUser";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { GitCommitHorizontal, Trophy, Code2, Swords, Settings, ExternalLink, AlertCircle } from "lucide-react";
+import { GitCommitHorizontal, Trophy, Code2, Swords, ExternalLink, AlertCircle } from "lucide-react";
 import { PendingChallenges } from "./_components/PendingChallenges";
 import { ActiveChallenges } from "./_components/ActiveChallenges";
 import { ContributionHeatmap } from "@/components/profile/ContributionHeatmap";
@@ -47,32 +45,29 @@ export default async function DashboardPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <Avatar className="h-12 w-12">
+          <Avatar className="h-12 w-12 border-2 border-[#63e4e0]">
             <AvatarImage src={user.avatar_url ?? undefined} />
-            <AvatarFallback>{user.full_name[0]}</AvatarFallback>
+            <AvatarFallback className="font-mono font-bold bg-[#1e3040]">{user.full_name[0]}</AvatarFallback>
           </Avatar>
           <div>
-            <h1 className="text-xl font-bold">{user.full_name}</h1>
-            <p className="text-sm text-muted-foreground">@{user.username}</p>
+            <h1 className="font-mono font-black text-xl uppercase tracking-tight text-white">
+              {user.full_name}
+            </h1>
+            <p className="font-mono text-xs text-[#63e4e0]">@{user.username}</p>
           </div>
         </div>
-        <Link href="/settings">
-          <Button variant="outline" size="sm" className="gap-1.5">
-            <Settings className="h-3.5 w-3.5" /> Settings
-          </Button>
-        </Link>
       </div>
 
       {/* Linking banner */}
       {needsLinking && (
-        <div className="flex items-start gap-3 rounded-lg border border-yellow-500/30 bg-yellow-500/10 px-4 py-3 text-sm text-yellow-400">
-          <AlertCircle className="h-4 w-4 mt-0.5 shrink-0" />
-          <span>
+        <div className="brutal-border flex items-start gap-3 bg-[#293a4e] px-4 py-3">
+          <AlertCircle className="h-4 w-4 mt-0.5 shrink-0 text-yellow-400" />
+          <span className="font-mono text-xs uppercase tracking-wider text-white/60">
             Link your {!user.leetcode_username && "LeetCode"}
-            {!user.leetcode_username && !user.codeforces_handle && " and "}
-            {!user.codeforces_handle && "Codeforces"} account in{" "}
-            <Link href="/settings" className="underline font-medium">Settings</Link>{" "}
-            to earn more Stadion Points.
+            {!user.leetcode_username && !user.codeforces_handle && " + "}
+            {!user.codeforces_handle && "Codeforces"} in{" "}
+            <Link href="/settings" className="text-[#63e4e0] underline">SETTINGS</Link>{" "}
+            to earn more SP.
           </span>
         </div>
       )}
@@ -80,28 +75,30 @@ export default async function DashboardPage() {
       {/* Stats row */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         {[
-          { icon: Trophy, label: "Rank", value: `#${currentRank}` },
-          { icon: Swords, label: "Stadion Points", value: user.stadion_points.toLocaleString() },
-          { icon: GitCommitHorizontal, label: "Commits (week)", value: gh?.weekly_commits ?? "—" },
-          { icon: Code2, label: "LC Rating", value: lc?.rating ?? "—" },
+          { icon: Trophy, label: "RANK", value: `#${currentRank}` },
+          { icon: Swords, label: "STADION PTS", value: user.stadion_points.toLocaleString() },
+          { icon: GitCommitHorizontal, label: "COMMITS /WK", value: String(gh?.weekly_commits ?? "---") },
+          { icon: Code2, label: "LC RATING", value: String(lc?.rating ?? "---") },
         ].map((s) => (
-          <Card key={s.label}>
-            <CardContent className="pt-5 pb-4">
-              <div className="flex items-center gap-2 text-muted-foreground text-xs mb-1">
-                <s.icon className="h-3.5 w-3.5" />
+          <div key={s.label} className="brutal-border bg-[#293a4e] p-4">
+            <div className="flex items-center gap-2 mb-2">
+              <s.icon className="h-3.5 w-3.5 text-[#63e4e0]" />
+              <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-white/40">
                 {s.label}
-              </div>
-              <p className="text-2xl font-bold">{s.value}</p>
-            </CardContent>
-          </Card>
+              </span>
+            </div>
+            <p className="font-mono font-black text-2xl text-white">{s.value}</p>
+          </div>
         ))}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Pending challenges */}
-        <Card>
+        <Card className="border-2 border-[rgba(99,228,224,0.2)]">
           <CardHeader className="pb-3">
-            <CardTitle className="text-base">Incoming Challenges</CardTitle>
+            <CardTitle className="font-mono font-bold text-sm uppercase tracking-wider">
+              INCOMING CHALLENGES
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <PendingChallenges challenges={pendingChallenges} currentUserId={user.id} />
@@ -109,9 +106,11 @@ export default async function DashboardPage() {
         </Card>
 
         {/* Active challenges */}
-        <Card>
+        <Card className="border-2 border-[rgba(99,228,224,0.2)]">
           <CardHeader className="pb-3">
-            <CardTitle className="text-base">Active Challenges</CardTitle>
+            <CardTitle className="font-mono font-bold text-sm uppercase tracking-wider">
+              ACTIVE CHALLENGES
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <ActiveChallenges challenges={activeChallenges} currentUserId={user.id} />
@@ -124,8 +123,12 @@ export default async function DashboardPage() {
         {(() => {
           const ghData = (gh?.contribution_data ?? []) as ContributionDay[];
           return ghData.length > 0 ? (
-            <Card>
-              <CardHeader className="pb-3"><CardTitle className="text-base">GitHub Contributions</CardTitle></CardHeader>
+            <Card className="border-2 border-[rgba(99,228,224,0.2)]">
+              <CardHeader className="pb-3">
+                <CardTitle className="font-mono font-bold text-sm uppercase tracking-wider">
+                  GITHUB CONTRIBUTIONS
+                </CardTitle>
+              </CardHeader>
               <CardContent className="overflow-x-auto">
                 <ContributionHeatmap data={ghData} />
               </CardContent>
@@ -133,8 +136,12 @@ export default async function DashboardPage() {
           ) : null;
         })()}
         {user.leetcode_username && (
-          <Card>
-            <CardHeader className="pb-3"><CardTitle className="text-base">LeetCode Activity</CardTitle></CardHeader>
+          <Card className="border-2 border-[rgba(99,228,224,0.2)]">
+            <CardHeader className="pb-3">
+              <CardTitle className="font-mono font-bold text-sm uppercase tracking-wider">
+                LEETCODE ACTIVITY
+              </CardTitle>
+            </CardHeader>
             <CardContent className="overflow-x-auto">
               <PlatformHeatmap
                 url={`/api/heatmap/leetcode/${user.leetcode_username}`}
@@ -145,8 +152,12 @@ export default async function DashboardPage() {
           </Card>
         )}
         {user.codeforces_handle && (
-          <Card>
-            <CardHeader className="pb-3"><CardTitle className="text-base">Codeforces Activity</CardTitle></CardHeader>
+          <Card className="border-2 border-[rgba(99,228,224,0.2)]">
+            <CardHeader className="pb-3">
+              <CardTitle className="font-mono font-bold text-sm uppercase tracking-wider">
+                CODEFORCES ACTIVITY
+              </CardTitle>
+            </CardHeader>
             <CardContent className="overflow-x-auto">
               <PlatformHeatmap
                 url={`/api/heatmap/codeforces/${user.codeforces_handle}`}
@@ -158,25 +169,21 @@ export default async function DashboardPage() {
         )}
       </div>
 
-      <Separator />
+      <Separator className="bg-[#63e4e0]/20" />
 
       {/* Quick links */}
       <div className="flex flex-wrap gap-3">
-        <Link href={`/u/${user.username}`}>
-          <Button variant="outline" size="sm" className="gap-1.5">
-            <ExternalLink className="h-3.5 w-3.5" /> View Profile
-          </Button>
-        </Link>
-        <Link href="/leaderboard">
-          <Button variant="outline" size="sm" className="gap-1.5">
-            <Trophy className="h-3.5 w-3.5" /> Leaderboard
-          </Button>
-        </Link>
-        <Link href="/contests">
-          <Button variant="outline" size="sm" className="gap-1.5">
-            <Swords className="h-3.5 w-3.5" /> Upcoming Contests
-          </Button>
-        </Link>
+        {[
+          { href: `/u/${user.username}`, icon: ExternalLink, label: "VIEW PROFILE" },
+          { href: "/leaderboard", icon: Trophy, label: "RANKINGS" },
+          { href: "/contests", icon: Swords, label: "CONTESTS" },
+        ].map((link) => (
+          <Link key={link.href} href={link.href}>
+            <button className="brutal-border brutal-hover bg-transparent text-[#63e4e0] font-mono font-bold text-[10px] uppercase tracking-wider px-4 py-2 flex items-center gap-2 cursor-pointer">
+              <link.icon className="h-3.5 w-3.5" /> {link.label}
+            </button>
+          </Link>
+        ))}
       </div>
     </div>
   );

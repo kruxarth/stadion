@@ -73,18 +73,18 @@ export default async function ProfilePage({ params }: { params: Promise<{ userna
     <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8 space-y-8">
       {/* Header */}
       <div className="flex items-start gap-5">
-        <Avatar className="h-16 w-16">
+        <Avatar className="h-16 w-16 border-2 border-[#63e4e0]">
           <AvatarImage src={user.avatar_url ?? undefined} />
-          <AvatarFallback className="text-xl">{user.full_name[0]}</AvatarFallback>
+          <AvatarFallback className="text-xl font-mono font-bold bg-[#1e3040]">{user.full_name[0]}</AvatarFallback>
         </Avatar>
         <div>
-          <h1 className="text-2xl font-bold">
-            {user.full_name} {user.is_alumni && "🎓"}
+          <h1 className="font-mono font-black text-2xl uppercase tracking-tight text-white">
+            {user.full_name}
           </h1>
-          <p className="text-muted-foreground">@{user.username}</p>
-          <p className="text-sm mt-1 text-muted-foreground">
-            {user.department ?? "—"} ·{" "}
-            {user.is_alumni ? "Alumni" : user.college_year ? `Year ${user.college_year}` : "—"}
+          <p className="font-mono text-sm text-[#63e4e0]">@{user.username}</p>
+          <p className="font-mono text-[10px] uppercase tracking-wider text-white/40 mt-1">
+            {user.department ?? "---"} //{" "}
+            {user.is_alumni ? "ALUMNI" : user.college_year ? `YEAR ${user.college_year}` : "---"}
           </p>
         </div>
       </div>
@@ -92,36 +92,38 @@ export default async function ProfilePage({ params }: { params: Promise<{ userna
       {/* Stats row */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         {[
-          { label: "Stadion Points", value: user.stadion_points.toLocaleString() },
-          { label: "Rank", value: `#${currentRank}` },
-          { label: "Weekly Commits", value: gh?.weekly_commits ?? "—" },
-          { label: "LC Rating", value: lc?.rating ?? (user.leetcode_username ? "Unrated" : "—") },
+          { label: "STADION PTS", value: user.stadion_points.toLocaleString() },
+          { label: "RANK", value: `#${currentRank}` },
+          { label: "COMMITS /WK", value: String(gh?.weekly_commits ?? "---") },
+          { label: "LC RATING", value: String(lc?.rating ?? (user.leetcode_username ? "UNRATED" : "---")) },
         ].map((s) => (
-          <div key={s.label} className="rounded-xl border border-border bg-card p-4 text-center">
-            <p className="text-2xl font-bold">{s.value}</p>
-            <p className="text-xs text-muted-foreground mt-1">{s.label}</p>
+          <div key={s.label} className="brutal-border bg-[#293a4e] p-4 text-center">
+            <p className="font-mono font-black text-2xl text-white">{s.value}</p>
+            <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-white/40 mt-1">{s.label}</p>
           </div>
         ))}
       </div>
 
       {/* Badges shelf */}
       {earnedBadges.length > 0 && (
-        <Card>
-          <CardHeader className="pb-3"><CardTitle className="text-base">Badges</CardTitle></CardHeader>
+        <Card className="border-2 border-[rgba(99,228,224,0.2)]">
+          <CardHeader className="pb-3">
+            <CardTitle className="font-mono font-bold text-sm uppercase tracking-wider">BADGES</CardTitle>
+          </CardHeader>
           <CardContent>
             <div className="flex flex-wrap gap-3">
               {earnedBadges.map((b) => (
                 <Tooltip key={`${b.slug}-${b.award_key}`}>
                   <TooltipTrigger>
-                    <div className="flex items-center gap-2 rounded-lg border border-border bg-muted/40 px-3 py-2 cursor-default">
+                    <div className="flex items-center gap-2 brutal-border bg-[#1e3040] px-3 py-2 cursor-default">
                       <span className="text-xl">{b.icon_url ? <img src={b.icon_url} className="h-5 w-5" alt={b.name} /> : (BADGE_EMOJI[b.slug] ?? "🏅")}</span>
-                      <span className="text-sm font-medium">{b.name}</span>
+                      <span className="font-mono text-xs font-bold uppercase tracking-wider text-white">{b.name}</span>
                     </div>
                   </TooltipTrigger>
                   <TooltipContent>
-                    <p className="font-medium">{b.name}</p>
-                    <p className="text-xs text-muted-foreground">{b.description}</p>
-                    <p className="text-xs text-muted-foreground mt-1">
+                    <p className="font-mono font-bold text-xs uppercase">{b.name}</p>
+                    <p className="font-mono text-[10px] text-white/50">{b.description}</p>
+                    <p className="font-mono text-[10px] text-white/30 mt-1">
                       Awarded {new Date(b.awarded_at).toLocaleDateString()}
                     </p>
                   </TooltipContent>
@@ -134,8 +136,10 @@ export default async function ProfilePage({ params }: { params: Promise<{ userna
 
       {/* GitHub heatmap */}
       {contributionData.length > 0 && (
-        <Card>
-          <CardHeader className="pb-3"><CardTitle className="text-base">GitHub Contributions</CardTitle></CardHeader>
+        <Card className="border-2 border-[rgba(99,228,224,0.2)]">
+          <CardHeader className="pb-3">
+            <CardTitle className="font-mono font-bold text-sm uppercase tracking-wider">GITHUB CONTRIBUTIONS</CardTitle>
+          </CardHeader>
           <CardContent className="overflow-x-auto">
             <ContributionHeatmap data={contributionData} />
           </CardContent>
@@ -144,8 +148,10 @@ export default async function ProfilePage({ params }: { params: Promise<{ userna
 
       {/* LeetCode heatmap */}
       {user.leetcode_username && (
-        <Card>
-          <CardHeader className="pb-3"><CardTitle className="text-base">LeetCode Activity</CardTitle></CardHeader>
+        <Card className="border-2 border-[rgba(99,228,224,0.2)]">
+          <CardHeader className="pb-3">
+            <CardTitle className="font-mono font-bold text-sm uppercase tracking-wider">LEETCODE ACTIVITY</CardTitle>
+          </CardHeader>
           <CardContent className="overflow-x-auto">
             <PlatformHeatmap
               url={`/api/heatmap/leetcode/${user.leetcode_username}`}
@@ -158,8 +164,10 @@ export default async function ProfilePage({ params }: { params: Promise<{ userna
 
       {/* Codeforces heatmap */}
       {user.codeforces_handle && (
-        <Card>
-          <CardHeader className="pb-3"><CardTitle className="text-base">Codeforces Activity</CardTitle></CardHeader>
+        <Card className="border-2 border-[rgba(99,228,224,0.2)]">
+          <CardHeader className="pb-3">
+            <CardTitle className="font-mono font-bold text-sm uppercase tracking-wider">CODEFORCES ACTIVITY</CardTitle>
+          </CardHeader>
           <CardContent className="overflow-x-auto">
             <PlatformHeatmap
               url={`/api/heatmap/codeforces/${user.codeforces_handle}`}
@@ -174,21 +182,23 @@ export default async function ProfilePage({ params }: { params: Promise<{ userna
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
         {/* Top repos */}
         {topRepos.length > 0 && (
-          <Card>
-            <CardHeader className="pb-3"><CardTitle className="text-base">Top Repositories</CardTitle></CardHeader>
+          <Card className="border-2 border-[rgba(99,228,224,0.2)]">
+            <CardHeader className="pb-3">
+              <CardTitle className="font-mono font-bold text-sm uppercase tracking-wider">TOP REPOS</CardTitle>
+            </CardHeader>
             <CardContent className="space-y-3">
               {topRepos.map((repo) => (
                 <Link key={repo.name} href={repo.url} target="_blank" rel="noopener noreferrer"
-                  className="flex items-start justify-between gap-2 rounded-lg p-3 border border-border hover:bg-muted/40 transition-colors">
+                  className="flex items-start justify-between gap-2 brutal-border brutal-hover p-3 bg-[#1e3040]">
                   <div className="min-w-0">
-                    <p className="font-medium text-sm flex items-center gap-1.5">
-                      <GitBranch className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                    <p className="font-mono font-bold text-xs uppercase flex items-center gap-1.5 text-white">
+                      <GitBranch className="h-3.5 w-3.5 shrink-0 text-[#63e4e0]" />
                       {repo.name}
                     </p>
-                    {repo.description && <p className="text-xs text-muted-foreground mt-0.5 truncate">{repo.description}</p>}
-                    {repo.language && <Badge variant="outline" className="text-xs mt-1.5">{repo.language}</Badge>}
+                    {repo.description && <p className="font-mono text-[10px] text-white/40 mt-0.5 truncate">{repo.description}</p>}
+                    {repo.language && <Badge variant="outline" className="font-mono text-[10px] mt-1.5 border-[#63e4e0]/30 text-[#63e4e0]">{repo.language}</Badge>}
                   </div>
-                  <div className="flex items-center gap-1 text-xs text-muted-foreground shrink-0">
+                  <div className="flex items-center gap-1 font-mono text-[10px] text-white/40 shrink-0">
                     <Star className="h-3 w-3" />{repo.stars}
                   </div>
                 </Link>
@@ -199,29 +209,31 @@ export default async function ProfilePage({ params }: { params: Promise<{ userna
 
         {/* LeetCode card */}
         {lc && (
-          <Card>
-            <CardHeader className="pb-3"><CardTitle className="text-base">LeetCode</CardTitle></CardHeader>
+          <Card className="border-2 border-[rgba(99,228,224,0.2)]">
+            <CardHeader className="pb-3">
+              <CardTitle className="font-mono font-bold text-sm uppercase tracking-wider">LEETCODE</CardTitle>
+            </CardHeader>
             <CardContent className="space-y-4">
-              <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Rating</span>
-                <span className="font-semibold">{lc.rating ?? "Unrated"}</span>
+              <div className="flex justify-between font-mono text-xs uppercase">
+                <span className="text-white/40">Rating</span>
+                <span className="font-bold text-white">{lc.rating ?? "UNRATED"}</span>
               </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Problems Solved</span>
-                <span className="font-semibold">{lc.problems_solved}</span>
+              <div className="flex justify-between font-mono text-xs uppercase">
+                <span className="text-white/40">Problems Solved</span>
+                <span className="font-bold text-white">{lc.problems_solved}</span>
               </div>
-              <div className="space-y-2 text-xs">
-                {([["Easy", lc.easy_count, "text-green-400"], ["Medium", lc.medium_count, "text-yellow-400"], ["Hard", lc.hard_count, "text-red-400"]] as const).map(([label, count, color]) => (
-                  <div key={label} className="flex items-center gap-2">
-                    <span className={`w-14 shrink-0 ${color}`}>{label}</span>
+              <div className="space-y-2">
+                {([["EASY", lc.easy_count, "text-green-400"], ["MED", lc.medium_count, "text-yellow-400"], ["HARD", lc.hard_count, "text-red-400"]] as const).map(([label, count, color]) => (
+                  <div key={label} className="flex items-center gap-2 font-mono text-[10px] uppercase">
+                    <span className={`w-10 shrink-0 ${color}`}>{label}</span>
                     <Progress value={(count / totalProblems) * 100} className="flex-1 h-1.5" />
-                    <span className="text-muted-foreground w-8 text-right">{count}</span>
+                    <span className="text-white/40 w-8 text-right">{count}</span>
                   </div>
                 ))}
               </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Contests</span>
-                <span>{lc.contests_participated}</span>
+              <div className="flex justify-between font-mono text-xs uppercase">
+                <span className="text-white/40">Contests</span>
+                <span className="text-white">{lc.contests_participated}</span>
               </div>
             </CardContent>
           </Card>
@@ -229,18 +241,20 @@ export default async function ProfilePage({ params }: { params: Promise<{ userna
 
         {/* Codeforces card */}
         {cf && (
-          <Card>
-            <CardHeader className="pb-3"><CardTitle className="text-base">Codeforces</CardTitle></CardHeader>
-            <CardContent className="space-y-3 text-sm">
+          <Card className="border-2 border-[rgba(99,228,224,0.2)]">
+            <CardHeader className="pb-3">
+              <CardTitle className="font-mono font-bold text-sm uppercase tracking-wider">CODEFORCES</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
               {[
-                ["Rating", cf.rating ?? "Unrated"],
-                ["Max Rating", cf.max_rating ?? "—"],
-                ["Rank", cf.rank ?? "Unrated"],
-                ["Contests", cf.contests_participated],
+                ["RATING", cf.rating ?? "UNRATED"],
+                ["MAX RATING", cf.max_rating ?? "---"],
+                ["RANK", cf.rank ?? "UNRATED"],
+                ["CONTESTS", cf.contests_participated],
               ].map(([label, value]) => (
-                <div key={String(label)} className="flex justify-between">
-                  <span className="text-muted-foreground">{label}</span>
-                  <span className="font-medium">{value}</span>
+                <div key={String(label)} className="flex justify-between font-mono text-xs uppercase">
+                  <span className="text-white/40">{label}</span>
+                  <span className="font-bold text-white">{value}</span>
                 </div>
               ))}
             </CardContent>
@@ -249,8 +263,10 @@ export default async function ProfilePage({ params }: { params: Promise<{ userna
 
         {/* Challenge history */}
         {recentChallenges.length > 0 && (
-          <Card>
-            <CardHeader className="pb-3"><CardTitle className="text-base">Challenge History</CardTitle></CardHeader>
+          <Card className="border-2 border-[rgba(99,228,224,0.2)]">
+            <CardHeader className="pb-3">
+              <CardTitle className="font-mono font-bold text-sm uppercase tracking-wider">CHALLENGE HISTORY</CardTitle>
+            </CardHeader>
             <CardContent>
               <ul className="space-y-2">
                 {recentChallenges.map((c) => {
@@ -258,13 +274,13 @@ export default async function ProfilePage({ params }: { params: Promise<{ userna
                   const result = c.winner_id === null ? "draw" : c.winner_id === user.id ? "win" : "loss";
                   const pts = result === "draw" ? 0 : result === "win" ? c.points_wagered : -c.points_wagered;
                   return (
-                    <li key={c.id} className="flex items-center justify-between text-sm">
+                    <li key={c.id} className="flex items-center justify-between font-mono text-xs uppercase">
                       <div>
-                        <span className="font-medium">vs @{opponentMap.get(opponentId) ?? "?"}</span>
-                        <span className="text-muted-foreground text-xs ml-2">{c.contest_name}</span>
+                        <span className="font-bold text-white">VS @{opponentMap.get(opponentId) ?? "?"}</span>
+                        <span className="text-white/30 ml-2">{c.contest_name}</span>
                       </div>
-                      <span className={pts > 0 ? "text-green-400" : pts < 0 ? "text-red-400" : "text-muted-foreground"}>
-                        {pts > 0 ? `+${pts}` : pts === 0 ? "Draw" : pts} SP
+                      <span className={pts > 0 ? "text-green-400 font-bold" : pts < 0 ? "text-red-400 font-bold" : "text-white/40"}>
+                        {pts > 0 ? `+${pts}` : pts === 0 ? "DRAW" : pts} SP
                       </span>
                     </li>
                   );

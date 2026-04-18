@@ -2,7 +2,6 @@
 
 import { useState, useTransition } from "react";
 import { completeOnboarding } from "../actions";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -41,15 +40,15 @@ export function OnboardingForm({ githubUsername }: { githubUsername: string }) {
     setError(null);
 
     if (!department) {
-      setError("Please select your department.");
+      setError("Select your department.");
       return;
     }
     if (!collegeYear) {
-      setError("Please select your current year.");
+      setError("Select your current year.");
       return;
     }
     if (!graduationYear || isNaN(Number(graduationYear))) {
-      setError("Please enter a valid graduation year.");
+      setError("Enter a valid graduation year.");
       return;
     }
 
@@ -72,9 +71,11 @@ export function OnboardingForm({ githubUsername }: { githubUsername: string }) {
     <form onSubmit={handleSubmit} className="space-y-5">
       {/* Department */}
       <div className="space-y-2">
-        <Label htmlFor="department">Department</Label>
+        <Label htmlFor="department" className="font-mono text-[10px] uppercase tracking-[0.2em] text-white/60">
+          Department
+        </Label>
         <Select value={department} onValueChange={(v) => setDepartment(v ?? "")}>
-          <SelectTrigger id="department" className="w-full">
+          <SelectTrigger id="department" className="w-full font-mono text-sm">
             <SelectValue placeholder="Select your department" />
           </SelectTrigger>
           <SelectContent>
@@ -89,9 +90,11 @@ export function OnboardingForm({ githubUsername }: { githubUsername: string }) {
 
       {/* College Year */}
       <div className="space-y-2">
-        <Label htmlFor="college_year">Current Year</Label>
+        <Label htmlFor="college_year" className="font-mono text-[10px] uppercase tracking-[0.2em] text-white/60">
+          Current Year
+        </Label>
         <Select value={collegeYear} onValueChange={(v) => setCollegeYear(v ?? "")}>
-          <SelectTrigger id="college_year" className="w-full">
+          <SelectTrigger id="college_year" className="w-full font-mono text-sm">
             <SelectValue placeholder="Select your year" />
           </SelectTrigger>
           <SelectContent>
@@ -112,7 +115,9 @@ export function OnboardingForm({ githubUsername }: { githubUsername: string }) {
 
       {/* Graduation Year */}
       <div className="space-y-2">
-        <Label htmlFor="graduation_year">Expected Graduation Year</Label>
+        <Label htmlFor="graduation_year" className="font-mono text-[10px] uppercase tracking-[0.2em] text-white/60">
+          Expected Graduation Year
+        </Label>
         <Input
           id="graduation_year"
           type="number"
@@ -121,14 +126,15 @@ export function OnboardingForm({ githubUsername }: { githubUsername: string }) {
           max={CURRENT_YEAR + 6}
           value={graduationYear}
           onChange={(e) => setGraduationYear(e.target.value)}
+          className="font-mono text-sm"
         />
       </div>
 
       {/* LeetCode */}
       <div className="space-y-2">
-        <Label htmlFor="leetcode_username">
+        <Label htmlFor="leetcode_username" className="font-mono text-[10px] uppercase tracking-[0.2em] text-white/60">
           LeetCode Username{" "}
-          <span className="text-muted-foreground text-sm">(optional)</span>
+          <span className="text-white/30">(optional)</span>
         </Label>
         <Input
           id="leetcode_username"
@@ -137,14 +143,15 @@ export function OnboardingForm({ githubUsername }: { githubUsername: string }) {
           value={leetcodeUsername}
           onChange={(e) => setLeetcodeUsername(e.target.value)}
           autoComplete="off"
+          className="font-mono text-sm"
         />
       </div>
 
       {/* Codeforces */}
       <div className="space-y-2">
-        <Label htmlFor="codeforces_handle">
+        <Label htmlFor="codeforces_handle" className="font-mono text-[10px] uppercase tracking-[0.2em] text-white/60">
           Codeforces Handle{" "}
-          <span className="text-muted-foreground text-sm">(optional)</span>
+          <span className="text-white/30">(optional)</span>
         </Label>
         <Input
           id="codeforces_handle"
@@ -153,19 +160,24 @@ export function OnboardingForm({ githubUsername }: { githubUsername: string }) {
           value={codeforcesHandle}
           onChange={(e) => setCodeforcesHandle(e.target.value)}
           autoComplete="off"
+          className="font-mono text-sm"
         />
       </div>
 
       {error && (
-        <p className="text-sm text-destructive">{error}</p>
+        <p className="font-mono text-xs text-[#ff3e3e] uppercase">{error}</p>
       )}
 
-      <Button type="submit" className="w-full" disabled={isPending}>
-        {isPending ? "Setting up your profile…" : "Complete Setup"}
-      </Button>
+      <button
+        type="submit"
+        disabled={isPending}
+        className="w-full brutal-border brutal-shadow brutal-hover bg-[#63e4e0] text-[#293a4e] font-mono font-black text-sm uppercase tracking-widest px-6 py-3 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+      >
+        {isPending ? "SETTING UP..." : "ENTER THE ARENA"}
+      </button>
 
-      <p className="text-xs text-center text-muted-foreground">
-        Signed in as <span className="font-medium">@{githubUsername}</span>
+      <p className="font-mono text-[10px] text-center uppercase tracking-wider text-white/30">
+        Signed in as <span className="text-[#63e4e0]">@{githubUsername}</span>
       </p>
     </form>
   );

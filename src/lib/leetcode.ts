@@ -212,6 +212,14 @@ export async function fetchLeetCodeContestRank(
   username: string,
   contestSlug: string,
 ): Promise<number | null> {
+  const result = await fetchLeetCodeContestRankResult(username, contestSlug);
+  return result.unavailable ? null : result.rank;
+}
+
+export async function fetchLeetCodeContestRankResult(
+  username: string,
+  contestSlug: string,
+): Promise<{ rank: number | null; unavailable: boolean }> {
   type HistoryData = {
     userContestRankingHistory: Array<{
       attended: boolean;
@@ -231,11 +239,11 @@ export async function fetchLeetCodeContestRank(
     { username },
   );
 
-  if (!data?.userContestRankingHistory) return null;
+  if (!data?.userContestRankingHistory) return { rank: null, unavailable: true };
 
   const entry = data.userContestRankingHistory.find(
     (h) => h.attended && h.contest.titleSlug === contestSlug,
   );
 
-  return entry?.ranking ?? null;
+  return { rank: entry?.ranking ?? null, unavailable: false };
 }

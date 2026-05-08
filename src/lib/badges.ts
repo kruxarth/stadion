@@ -13,9 +13,10 @@ async function awardBadge(userId: string, slug: string, awardKey: string): Promi
   const badgeId = await getBadgeId(slug);
   if (!badgeId) return false;
   try {
-    await db.insert(userBadges).values({ user_id: userId, badge_id: badgeId, award_key: awardKey })
-      .onConflictDoNothing();
-    return true;
+    const inserted = await db.insert(userBadges).values({ user_id: userId, badge_id: badgeId, award_key: awardKey })
+      .onConflictDoNothing()
+      .returning({ id: userBadges.id });
+    return inserted.length > 0;
   } catch {
     return false;
   }
@@ -35,25 +36,13 @@ async function checkCommitKing(awardKey: string): Promise<number> {
     .orderBy(desc(githubStats.monthly_commits))
     .limit(1);
   if (!rows[0] || rows[0].monthly_commits === 0) return 0;
-  await awardBadge(rows[0].user_id, "commit-king", awardKey);
-  return 1;
-}
-
-async function checkLeaderboardLegend(awardKey: string): Promise<number> {
-  const rows = await db
-    .select({ id: users.id })
-    .from(users)
-    .orderBy(desc(users.stadion_points))
-    .limit(1);
-  if (!rows[0]) return 0;
-  await awardBadge(rows[0].id, "leaderboard-legend", awardKey);
-  return 1;
+  return await awardBadge(rows[0].user_id, "commit-king", awardKey) ? 1 : 0;
 }
 
 async function checkArenaKing(awardKey: string): Promise<number> {
   const [year, month] = awardKey.split("-").map(Number);
-  const monthStart = new Date(Date.UTC(year, month - 1, 1));
-  const monthEnd = new Date(Date.UTC(year, month, 1));
+  const monthStart = new Date(Date.UTC(year, month - 1, 1)).toISOString();
+  const monthEnd = new Date(Date.UTC(year, month, 1)).toISOString();
 
   // Count wins per user in the current month (using updated_at as resolution proxy)
   const winCounts = await db
@@ -75,8 +64,23 @@ async function checkArenaKing(awardKey: string): Promise<number> {
 
   const top = winCounts[0];
   if (!top?.user_id || Number(top.wins) < 3) return 0;
-  await awardBadge(top.user_id, "arena-king", awardKey);
-  return 1;
+  return await awardBadge(top.user_id, "arena-king", awardKey) ? 1 : 0;
+}
+
+async function checkDuelists(): Promise<number> {
+  const winners = await db
+    .select({ user_id: challenges.winner_id })
+    .from(challenges)
+    .where(and(eq(challenges.status, "completed"), isNotNull(challenges.winner_id)))
+    .groupBy(challenges.winner_id);
+
+  let awarded = 0;
+  for (const winner of winners) {
+    if (winner.user_id && await awardBadge(winner.user_id, "duelist", "once")) {
+      awarded++;
+    }
+  }
+  return awarded;
 }
 
 async function checkCFKing(awardKey: string): Promise<number> {
@@ -87,8 +91,7 @@ async function checkCFKing(awardKey: string): Promise<number> {
     .orderBy(desc(codeforcesStats.rating));
 
   if (rows.length < 2) return 0; // need at least 2 competitors
-  await awardBadge(rows[0].user_id, "cf-king", awardKey);
-  return 1;
+  return await awardBadge(rows[0].user_id, "cf-king", awardKey) ? 1 : 0;
 }
 
 async function checkLCKing(awardKey: string): Promise<number> {
@@ -99,8 +102,7 @@ async function checkLCKing(awardKey: string): Promise<number> {
     .orderBy(desc(leetcodeStats.rating));
 
   if (rows.length < 2) return 0;
-  await awardBadge(rows[0].user_id, "lc-king", awardKey);
-  return 1;
+  return await awardBadge(rows[0].user_id, "lc-king", awardKey) ? 1 : 0;
 }
 
 async function checkAlumniLegend(): Promise<number> {
@@ -125,8 +127,8 @@ export async function evaluateAllBadges(): Promise<number> {
 
   const results = await Promise.allSettled([
     checkCommitKing(awardKey),
-    checkLeaderboardLegend(awardKey),
     checkArenaKing(awardKey),
+    checkDuelists(),
     checkCFKing(awardKey),
     checkLCKing(awardKey),
     checkAlumniLegend(),

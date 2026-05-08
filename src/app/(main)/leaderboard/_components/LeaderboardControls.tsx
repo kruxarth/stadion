@@ -3,9 +3,10 @@
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 
 const TABS = [
-  { value: "all-time", label: "All-time" },
-  { value: "monthly", label: "Monthly" },
-  { value: "weekly", label: "Weekly" },
+  { value: "builders", label: "Builders" },
+  { value: "leetcode", label: "LeetCode" },
+  { value: "codeforces", label: "Codeforces" },
+  { value: "arena", label: "Arena" },
 ] as const;
 
 const YEARS = [

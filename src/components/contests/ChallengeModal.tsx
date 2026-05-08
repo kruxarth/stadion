@@ -8,8 +8,6 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
-const WAGER_OPTIONS = [25, 50, 100, 150];
-
 interface UserOption {
   id: string;
   username: string;
@@ -26,18 +24,15 @@ interface Props {
   contestStart: Date;
   contestEnd: Date;
   currentUserId: string;
-  currentUserPoints: number;
-  currentUserAvailablePoints: number;
 }
 
 export function ChallengeModal({
   open, onClose, contestName, contestSlug, platform,
-  contestStart, contestEnd, currentUserId, currentUserPoints, currentUserAvailablePoints,
+  contestStart, contestEnd, currentUserId,
 }: Props) {
   const [users, setUsers] = useState<UserOption[]>([]);
   const [search, setSearch] = useState("");
   const [selectedUser, setSelectedUser] = useState<UserOption | null>(null);
-  const [wager, setWager] = useState(50);
   const [isPending, startTransition] = useTransition();
 
   useEffect(() => {
@@ -54,7 +49,7 @@ export function ChallengeModal({
       u.username.toLowerCase().includes(search.toLowerCase()),
   );
 
-  const canSend = selectedUser && currentUserAvailablePoints >= wager;
+  const canSend = selectedUser !== null;
 
   function handleSend() {
     if (!selectedUser) return;
@@ -69,7 +64,6 @@ export function ChallengeModal({
           contest_name: contestName,
           contest_start: contestStart.toISOString(),
           contest_end: contestEnd.toISOString(),
-          points_wagered: wager,
         }),
       });
       if (res.ok) {
@@ -118,26 +112,6 @@ export function ChallengeModal({
               </div>
             )}
             {selectedUser && !search.includes(selectedUser.full_name) && null}
-          </div>
-
-          {/* Wager selector */}
-          <div className="space-y-2">
-            <Label>Wager (Stadion Points)</Label>
-            <div className="flex gap-2">
-              {WAGER_OPTIONS.map((w) => (
-                <button key={w} onClick={() => setWager(w)}
-                  className={`flex-1 rounded-lg border px-3 py-2 text-sm font-medium transition-colors ${
-                    wager === w ? "border-[#63e4e0] bg-[#63e4e0]/10 text-[#63e4e0]" : "border-border hover:bg-muted/60"
-                  }`}>
-                  {w}
-                </button>
-              ))}
-            </div>
-            {currentUserAvailablePoints < wager && (
-              <p className="text-xs text-destructive">
-                Insufficient available points ({currentUserAvailablePoints} SP available).
-              </p>
-            )}
           </div>
 
           <Button className="w-full" disabled={!canSend || isPending} onClick={handleSend}

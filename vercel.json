@@ -13,20 +13,12 @@
       "schedule": "0 */6 * * *"
     },
     {
-      "path": "/api/cron/recalculate-points",
-      "schedule": "30 */6 * * *"
-    },
-    {
       "path": "/api/cron/expire-challenges",
       "schedule": "*/30 * * * *"
     },
     {
       "path": "/api/cron/resolve-challenges",
       "schedule": "*/30 * * * *"
-    },
-    {
-      "path": "/api/cron/snapshot-ranks",
-      "schedule": "0 0 * * *"
     },
     {
       "path": "/api/cron/check-alumni",

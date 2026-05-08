@@ -44,10 +44,10 @@ export function LeaderboardPreview({ users }: LeaderboardPreviewProps) {
         <div className="flex items-end justify-between mb-6">
           <div>
             <h2 className="font-mono font-black text-2xl sm:text-3xl uppercase tracking-tight text-white">
-              TOP KILLERS
+              TOP BUILDERS
             </h2>
             <p className="font-mono text-xs uppercase tracking-[0.2em] text-white/40 mt-1">
-              ALL-TIME STADION POINTS
+              CURRENT MONTH CONTRIBUTIONS
             </p>
           </div>
           <Link href="/leaderboard">
@@ -63,7 +63,7 @@ export function LeaderboardPreview({ users }: LeaderboardPreviewProps) {
           <div className="flex items-center gap-4 px-5 py-2.5 border-b-2 border-[#63e4e0]/30 font-mono text-[10px] uppercase tracking-[0.2em] text-white/30">
             <span className="w-10">RANK</span>
             <span className="flex-1">PLAYER</span>
-            <span className="text-right w-20">POINTS</span>
+            <span className="text-right w-20">CONTRIB</span>
           </div>
 
           {isEmpty ? (
@@ -111,9 +111,9 @@ export function LeaderboardPreview({ users }: LeaderboardPreviewProps) {
                     </div>
                     <div className="text-right shrink-0">
                       <p className="font-mono font-black text-lg text-[#63e4e0]">
-                        {user.stadion_points.toLocaleString()}
+                        {user.score.toLocaleString()}
                       </p>
-                      <p className="font-mono text-[10px] text-white/30 uppercase">SP</p>
+                      <p className="font-mono text-[10px] text-white/30 uppercase">MONTH</p>
                     </div>
                   </Link>
                 </motion.div>

@@ -1,7 +1,7 @@
 import { auth } from "@clerk/nextjs/server";
 import { db } from "@/lib/db";
 import { users, challenges } from "@/lib/db/schema";
-import { eq, or, and, sql } from "drizzle-orm";
+import { eq, or, and } from "drizzle-orm";
 import { fetchUpcomingLeetCodeContests } from "@/lib/leetcode";
 import { fetchUpcomingCodeforcesContests } from "@/lib/codeforces";
 import { ContestCard } from "@/components/contests/ContestCard";
@@ -39,27 +39,12 @@ export default async function ContestsPage() {
 
   // Get current user's context for the challenge button
   let currentUserId: string | undefined;
-  let currentUserPoints = 0;
-  let currentUserAvailablePoints = 0;
   let activeChallenges: typeof challenges.$inferSelect[] = [];
 
   if (clerkId) {
     const user = await db.query.users.findFirst({ where: eq(users.clerk_id, clerkId) });
     if (user) {
       currentUserId = user.id;
-      currentUserPoints = user.stadion_points;
-
-      const reserved = await db
-        .select({ total: sql<number>`COALESCE(SUM(${challenges.points_wagered}), 0)` })
-        .from(challenges)
-        .where(
-          and(
-            or(eq(challenges.challenger_id, user.id), eq(challenges.opponent_id, user.id)),
-            eq(challenges.status, "accepted"),
-          ),
-        );
-      const reservedPoints = Number(reserved[0]?.total ?? 0);
-      currentUserAvailablePoints = user.stadion_points - reservedPoints;
 
       activeChallenges = await db.select().from(challenges).where(
         and(
@@ -102,8 +87,6 @@ export default async function ContestsPage() {
               startTime={c.startTime}
               endTime={c.endTime}
               currentUserId={currentUserId}
-              currentUserPoints={currentUserPoints}
-              currentUserAvailablePoints={currentUserAvailablePoints}
             />
           ))}
         </div>
@@ -122,7 +105,7 @@ export default async function ContestsPage() {
                 <div key={c.id} className="brutal-border bg-[#293a4e] p-4">
                   <p className="font-mono font-bold text-sm text-white uppercase">{c.contest_name}</p>
                   <p className="font-mono text-[10px] text-white/40 uppercase tracking-wider mt-1">
-                    {c.platform} // {c.points_wagered} SP wagered // ends{" "}
+                    {c.platform} // ranked head-to-head // ends{" "}
                     {new Date(c.contest_end).toLocaleString()}
                   </p>
                 </div>

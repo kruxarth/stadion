@@ -1,9 +1,10 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { eq, or, and, sql } from "drizzle-orm";
+import { eq, or, and } from "drizzle-orm";
 import { db } from "@/lib/db";
-import { users, githubStats, leetcodeStats, codeforcesStats, challenges } from "@/lib/db/schema";
+import { githubStats, leetcodeStats, codeforcesStats, challenges } from "@/lib/db/schema";
 import { ensureUser } from "@/lib/ensureUser";
+import { getBuilderRank, getChallengeRecord } from "@/lib/queries/leaderboard";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
@@ -20,7 +21,7 @@ export default async function DashboardPage() {
   const user = await ensureUser();
   if (!user) redirect("/");
 
-  const [gh, lc, cf, pendingChallenges, activeChallenges, rankResult] = await Promise.all([
+  const [gh, lc, cf, pendingChallenges, activeChallenges, challengeRecord] = await Promise.all([
     db.query.githubStats.findFirst({ where: eq(githubStats.user_id, user.id) }),
     db.query.leetcodeStats.findFirst({ where: eq(leetcodeStats.user_id, user.id) }),
     db.query.codeforcesStats.findFirst({ where: eq(codeforcesStats.user_id, user.id) }),
@@ -33,11 +34,10 @@ export default async function DashboardPage() {
         eq(challenges.status, "accepted"),
       ),
     ),
-    db.select({ count: sql<number>`COUNT(*)` }).from(users)
-      .where(sql`${users.stadion_points} > ${user.stadion_points}`),
+    getChallengeRecord(user.id),
   ]);
 
-  const currentRank = Number(rankResult[0]?.count ?? 0) + 1;
+  const currentRank = await getBuilderRank(user.id, gh?.monthly_commits ?? 0);
   const needsLinking = !user.leetcode_username || !user.codeforces_handle;
 
   return (
@@ -67,7 +67,7 @@ export default async function DashboardPage() {
             {!user.leetcode_username && !user.codeforces_handle && " + "}
             {!user.codeforces_handle && "Codeforces"} in{" "}
             <Link href="/settings" className="text-[#63e4e0] underline">SETTINGS</Link>{" "}
-            to earn more SP.
+            to appear on more rankings.
           </span>
         </div>
       )}
@@ -75,9 +75,9 @@ export default async function DashboardPage() {
       {/* Stats row */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         {[
-          { icon: Trophy, label: "RANK", value: `#${currentRank}` },
-          { icon: Swords, label: "STADION PTS", value: user.stadion_points.toLocaleString() },
-          { icon: GitCommitHorizontal, label: "COMMITS /WK", value: String(gh?.weekly_commits ?? "---") },
+          { icon: Trophy, label: "BUILDER RANK", value: `#${currentRank}` },
+          { icon: GitCommitHorizontal, label: "CONTRIB /MO", value: String(gh?.monthly_commits ?? "---") },
+          { icon: Swords, label: "ARENA RECORD", value: `${challengeRecord.wins}-${challengeRecord.losses}-${challengeRecord.draws}` },
           { icon: Code2, label: "LC RATING", value: String(lc?.rating ?? "---") },
         ].map((s) => (
           <div key={s.label} className="brutal-border bg-[#293a4e] p-4">

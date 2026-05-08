@@ -1,6 +1,7 @@
 import { db } from "@/lib/db";
-import { users, githubStats, leetcodeStats, codeforcesStats, userBadges, badges, challenges, rankSnapshots } from "@/lib/db/schema";
+import { users, githubStats, leetcodeStats, codeforcesStats, userBadges, badges, challenges } from "@/lib/db/schema";
 import { eq, and, or, desc, sql } from "drizzle-orm";
+import { getBuilderRank, getChallengeRecord } from "@/lib/queries/leaderboard";
 
 export async function GET(
   _request: Request,
@@ -13,7 +14,7 @@ export async function GET(
   });
   if (!user) return Response.json({ error: "User not found" }, { status: 404 });
 
-  const [gh, lc, cf, earnedBadges, recentChallenges, rankRow] = await Promise.all([
+  const [gh, lc, cf, earnedBadges, recentChallenges, challengeRecord] = await Promise.all([
     db.query.githubStats.findFirst({ where: eq(githubStats.user_id, user.id) }),
     db.query.leetcodeStats.findFirst({ where: eq(leetcodeStats.user_id, user.id) }),
     db.query.codeforcesStats.findFirst({ where: eq(codeforcesStats.user_id, user.id) }),
@@ -40,7 +41,6 @@ export async function GET(
         challenger_id: challenges.challenger_id,
         opponent_id: challenges.opponent_id,
         winner_id: challenges.winner_id,
-        points_wagered: challenges.points_wagered,
         updated_at: challenges.updated_at,
       })
       .from(challenges)
@@ -53,18 +53,10 @@ export async function GET(
       .orderBy(desc(challenges.updated_at))
       .limit(5),
 
-    db.query.rankSnapshots.findFirst({
-      where: eq(rankSnapshots.user_id, user.id),
-      orderBy: [desc(rankSnapshots.snapshot_date)],
-    }),
+    getChallengeRecord(user.id),
   ]);
 
-  // Compute current rank from live standings
-  const rankResult = await db
-    .select({ count: sql<number>`COUNT(*)` })
-    .from(users)
-    .where(sql`${users.stadion_points} > ${user.stadion_points}`);
-  const currentRank = Number(rankResult[0]?.count ?? 0) + 1;
+  const currentRank = await getBuilderRank(user.id, gh?.monthly_commits ?? 0);
 
   // Fetch opponent names for challenge history
   const opponentIds = recentChallenges.map((c) =>
@@ -83,27 +75,38 @@ export async function GET(
     const opponentId = c.challenger_id === user.id ? c.opponent_id : c.challenger_id;
     const result =
       c.winner_id === null ? "draw" : c.winner_id === user.id ? "win" : "loss";
-    const pointChange =
-      result === "draw" ? 0 : result === "win" ? c.points_wagered : -c.points_wagered;
     return {
       id: c.id,
       platform: c.platform,
       contest_name: c.contest_name,
       opponent_username: opponentMap.get(opponentId) ?? "unknown",
       result,
-      point_change: pointChange,
       resolved_at: c.updated_at,
     };
   });
 
   return Response.json({
-    user,
+    user: {
+      id: user.id,
+      username: user.username,
+      full_name: user.full_name,
+      avatar_url: user.avatar_url,
+      github_username: user.github_username,
+      leetcode_username: user.leetcode_username,
+      codeforces_handle: user.codeforces_handle,
+      department: user.department,
+      college_year: user.college_year,
+      graduation_year: user.graduation_year,
+      is_alumni: user.is_alumni,
+      created_at: user.created_at,
+      updated_at: user.updated_at,
+    },
     rank: currentRank,
     github_stats: gh ?? null,
     leetcode_stats: lc ?? null,
     codeforces_stats: cf ?? null,
     badges: earnedBadges,
+    challenge_record: challengeRecord,
     challenge_history: challengeHistory,
-    last_rank_snapshot: rankRow ?? null,
   });
 }

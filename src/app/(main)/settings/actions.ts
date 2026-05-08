@@ -43,7 +43,11 @@ export async function updateSettings(data: SettingsData): Promise<{ success: boo
     if (stats) {
       await db.insert(leetcodeStats).values({ user_id: user.id, ...stats, updated_at: new Date() })
         .onConflictDoUpdate({ target: leetcodeStats.user_id, set: { ...stats, updated_at: new Date() } });
+    } else {
+      await db.delete(leetcodeStats).where(eq(leetcodeStats.user_id, user.id));
     }
+  } else if (lcUsernameChanged) {
+    await db.delete(leetcodeStats).where(eq(leetcodeStats.user_id, user.id));
   }
 
   if (cfHandleChanged && data.codeforces_handle.trim()) {
@@ -51,7 +55,11 @@ export async function updateSettings(data: SettingsData): Promise<{ success: boo
     if (stats) {
       await db.insert(codeforcesStats).values({ user_id: user.id, ...stats, updated_at: new Date() })
         .onConflictDoUpdate({ target: codeforcesStats.user_id, set: { ...stats, updated_at: new Date() } });
+    } else {
+      await db.delete(codeforcesStats).where(eq(codeforcesStats.user_id, user.id));
     }
+  } else if (cfHandleChanged) {
+    await db.delete(codeforcesStats).where(eq(codeforcesStats.user_id, user.id));
   }
 
   return { success: true };

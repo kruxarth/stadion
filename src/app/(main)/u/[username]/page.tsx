@@ -5,7 +5,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
-import { Star, GitBranch, ExternalLink } from "lucide-react";
+import { Star, GitBranch } from "lucide-react";
 import Link from "next/link";
 import { ContributionHeatmap } from "@/components/profile/ContributionHeatmap";
 import { PlatformHeatmap } from "@/components/profile/PlatformHeatmap";
@@ -13,13 +13,14 @@ import { fetchTopRepos } from "@/lib/github";
 import { db } from "@/lib/db";
 import {
   users, githubStats, leetcodeStats, codeforcesStats,
-  userBadges, badges as badgesTable, challenges, rankSnapshots,
+  userBadges, badges as badgesTable, challenges,
 } from "@/lib/db/schema";
 import { eq, and, or, desc, sql } from "drizzle-orm";
 import type { ContributionDay } from "@/lib/github";
+import { getBuilderRank, getChallengeRecord } from "@/lib/queries/leaderboard";
 
 const BADGE_EMOJI: Record<string, string> = {
-  "commit-king": "👑", "leaderboard-legend": "🏆", "arena-king": "⚔️",
+  "commit-king": "👑", "duelist": "⚔️", "arena-king": "⚔️",
   "cf-king": "🔵", "lc-king": "🟡", "alumni-legend": "🎓",
 };
 
@@ -34,7 +35,7 @@ export default async function ProfilePage({ params }: { params: Promise<{ userna
   const user = await db.query.users.findFirst({ where: eq(users.username, username) });
   if (!user) notFound();
 
-  const [gh, lc, cf, earnedBadges, recentChallenges, rankResult] = await Promise.all([
+  const [gh, lc, cf, earnedBadges, recentChallenges, challengeRecord] = await Promise.all([
     db.query.githubStats.findFirst({ where: eq(githubStats.user_id, user.id) }),
     db.query.leetcodeStats.findFirst({ where: eq(leetcodeStats.user_id, user.id) }),
     db.query.codeforcesStats.findFirst({ where: eq(codeforcesStats.user_id, user.id) }),
@@ -44,16 +45,15 @@ export default async function ProfilePage({ params }: { params: Promise<{ userna
       .where(eq(userBadges.user_id, user.id)).orderBy(desc(userBadges.awarded_at)),
     db.select({ id: challenges.id, platform: challenges.platform, contest_name: challenges.contest_name,
         challenger_id: challenges.challenger_id, opponent_id: challenges.opponent_id,
-        winner_id: challenges.winner_id, points_wagered: challenges.points_wagered, updated_at: challenges.updated_at })
+        winner_id: challenges.winner_id, updated_at: challenges.updated_at })
       .from(challenges)
       .where(and(or(eq(challenges.challenger_id, user.id), eq(challenges.opponent_id, user.id)),
         eq(challenges.status, "completed")))
       .orderBy(desc(challenges.updated_at)).limit(5),
-    db.select({ count: sql<number>`COUNT(*)` }).from(users)
-      .where(sql`${users.stadion_points} > ${user.stadion_points}`),
+    getChallengeRecord(user.id),
   ]);
 
-  const currentRank = Number(rankResult[0]?.count ?? 0) + 1;
+  const currentRank = await getBuilderRank(user.id, gh?.monthly_commits ?? 0);
   const topRepos = await fetchTopRepos(user.github_username);
 
   // Fetch opponent usernames for challenge history
@@ -92,9 +92,9 @@ export default async function ProfilePage({ params }: { params: Promise<{ userna
       {/* Stats row */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         {[
-          { label: "STADION PTS", value: user.stadion_points.toLocaleString() },
-          { label: "RANK", value: `#${currentRank}` },
-          { label: "COMMITS /WK", value: String(gh?.weekly_commits ?? "---") },
+          { label: "BUILDER RANK", value: `#${currentRank}` },
+          { label: "CONTRIB /MO", value: String(gh?.monthly_commits ?? "---") },
+          { label: "ARENA", value: `${challengeRecord.wins}-${challengeRecord.losses}-${challengeRecord.draws}` },
           { label: "LC RATING", value: String(lc?.rating ?? (user.leetcode_username ? "UNRATED" : "---")) },
         ].map((s) => (
           <div key={s.label} className="brutal-border bg-[#293a4e] p-4 text-center">
@@ -272,15 +272,14 @@ export default async function ProfilePage({ params }: { params: Promise<{ userna
                 {recentChallenges.map((c) => {
                   const opponentId = c.challenger_id === user.id ? c.opponent_id : c.challenger_id;
                   const result = c.winner_id === null ? "draw" : c.winner_id === user.id ? "win" : "loss";
-                  const pts = result === "draw" ? 0 : result === "win" ? c.points_wagered : -c.points_wagered;
                   return (
                     <li key={c.id} className="flex items-center justify-between font-mono text-xs uppercase">
                       <div>
                         <span className="font-bold text-white">VS @{opponentMap.get(opponentId) ?? "?"}</span>
                         <span className="text-white/30 ml-2">{c.contest_name}</span>
                       </div>
-                      <span className={pts > 0 ? "text-green-400 font-bold" : pts < 0 ? "text-red-400 font-bold" : "text-white/40"}>
-                        {pts > 0 ? `+${pts}` : pts === 0 ? "DRAW" : pts} SP
+                      <span className={result === "win" ? "text-green-400 font-bold" : result === "loss" ? "text-red-400 font-bold" : "text-white/40"}>
+                        {result}
                       </span>
                     </li>
                   );

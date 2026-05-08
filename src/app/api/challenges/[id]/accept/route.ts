@@ -1,24 +1,7 @@
 import { db } from "@/lib/db";
-import { challenges, users } from "@/lib/db/schema";
-import { eq, or, and, sql } from "drizzle-orm";
+import { challenges } from "@/lib/db/schema";
+import { eq } from "drizzle-orm";
 import { ensureUser } from "@/lib/ensureUser";
-
-async function getAvailablePoints(userId: string): Promise<number> {
-  const user = await db.query.users.findFirst({
-    where: eq(users.id, userId),
-    columns: { stadion_points: true },
-  });
-  const reserved = await db
-    .select({ total: sql<number>`COALESCE(SUM(${challenges.points_wagered}), 0)` })
-    .from(challenges)
-    .where(
-      and(
-        or(eq(challenges.challenger_id, userId), eq(challenges.opponent_id, userId)),
-        eq(challenges.status, "accepted"),
-      ),
-    );
-  return (user?.stadion_points ?? 0) - Number(reserved[0]?.total ?? 0);
-}
 
 export async function POST(
   _request: Request,
@@ -42,19 +25,6 @@ export async function POST(
   }
   if (new Date(challenge.contest_start) <= new Date()) {
     return Response.json({ error: "Contest has already started" }, { status: 400 });
-  }
-
-  // Validate available points for both users
-  const [challengerAvailable, opponentAvailable] = await Promise.all([
-    getAvailablePoints(challenge.challenger_id),
-    getAvailablePoints(user.id),
-  ]);
-
-  if (challengerAvailable < challenge.points_wagered) {
-    return Response.json({ error: "Challenger no longer has sufficient points" }, { status: 400 });
-  }
-  if (opponentAvailable < challenge.points_wagered) {
-    return Response.json({ error: "You do not have sufficient available points" }, { status: 400 });
   }
 
   const [updated] = await db

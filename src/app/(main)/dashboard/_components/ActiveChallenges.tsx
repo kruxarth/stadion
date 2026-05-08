@@ -28,7 +28,7 @@ export function ActiveChallenges({ challenges, currentUserId }: Props) {
               <div>
                 <p className="font-medium">{c.contest_name}</p>
                 <p className="text-muted-foreground text-xs mt-0.5">
-                  {c.platform} · {role} · {c.points_wagered} SP
+                  {c.platform} · {role} · ranked
                 </p>
               </div>
               <span className="text-xs text-muted-foreground whitespace-nowrap shrink-0">

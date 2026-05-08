@@ -6,7 +6,7 @@ import { Users, GitCommitHorizontal, Trophy } from "lucide-react";
 interface StatCardsProps {
   totalMembers: number;
   weeklyCommits: number;
-  topUser: { username: string; full_name: string; stadion_points: number } | null;
+  topUser: { username: string; full_name: string; monthly_commits: number } | null;
 }
 
 export function StatCards({ totalMembers, weeklyCommits, topUser }: StatCardsProps) {
@@ -21,13 +21,13 @@ export function StatCards({ totalMembers, weeklyCommits, topUser }: StatCardsPro
       icon: GitCommitHorizontal,
       label: "THIS WEEK",
       value: weeklyCommits.toLocaleString(),
-      suffix: "COMMITS",
+      suffix: "CONTRIBUTIONS",
     },
     {
       icon: Trophy,
-      label: "CURRENT #1",
+      label: "TOP BUILDER",
       value: topUser ? `@${topUser.username}` : "---",
-      suffix: topUser ? `${topUser.stadion_points.toLocaleString()} SP` : null,
+      suffix: topUser ? `${topUser.monthly_commits.toLocaleString()} CONTRIBUTIONS` : null,
     },
   ];
 

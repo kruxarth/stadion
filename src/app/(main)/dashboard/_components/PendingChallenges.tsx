@@ -36,7 +36,7 @@ export function PendingChallenges({ challenges, currentUserId }: Props) {
         <li key={c.id} className="rounded-lg border border-border p-3 text-sm">
           <p className="font-medium">{c.contest_name}</p>
           <p className="text-muted-foreground text-xs mt-0.5">
-            {c.platform} · {c.points_wagered} SP wager
+            {c.platform} · ranked head-to-head
           </p>
           <div className="flex gap-2 mt-3">
             <Button size="sm" className="h-7 text-xs px-3" onClick={() => respond(c.id, "accept")}

@@ -157,12 +157,20 @@ export async function fetchCodeforcesContestRank(
   handle: string,
   contestId: string,
 ): Promise<number | null> {
+  const result = await fetchCodeforcesContestRankResult(handle, contestId);
+  return result.unavailable ? null : result.rank;
+}
+
+export async function fetchCodeforcesContestRankResult(
+  handle: string,
+  contestId: string,
+): Promise<{ rank: number | null; unavailable: boolean }> {
   const ratingHistory = await cfGet<CfRatingChange[]>(
     `/user.rating?handle=${encodeURIComponent(handle)}`,
   );
 
-  if (!ratingHistory) return null;
+  if (!ratingHistory) return { rank: null, unavailable: true };
 
   const entry = ratingHistory.find((c) => String(c.contestId) === contestId);
-  return entry?.rank ?? null;
+  return { rank: entry?.rank ?? null, unavailable: false };
 }

@@ -1,7 +1,7 @@
 import { Suspense } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { LeaderboardTable } from "@/components/leaderboard/LeaderboardTable";
-import { getLeaderboard } from "@/lib/queries/leaderboard";
+import { getLeaderboard, type LeaderboardCategory } from "@/lib/queries/leaderboard";
 import { LeaderboardControls } from "./_components/LeaderboardControls";
 
 export const metadata = { title: "Leaderboard — Stadion" };
@@ -10,9 +10,16 @@ type SearchParams = Promise<{ tab?: string; year?: string; page?: string }>;
 
 export default async function LeaderboardPage({ searchParams }: { searchParams: SearchParams }) {
   const params = await searchParams;
-  const tab = (params.tab ?? "all-time") as "weekly" | "monthly" | "all-time";
-  const year = (params.year ?? "all") as "all" | "1" | "2" | "3" | "4" | "alumni";
-  const page = Math.max(1, Number(params.page ?? "1"));
+  const allowedTabs: LeaderboardCategory[] = ["builders", "leetcode", "codeforces", "arena"];
+  const allowedYears = ["all", "1", "2", "3", "4", "alumni"] as const;
+  const tab = allowedTabs.includes(params.tab as LeaderboardCategory)
+    ? params.tab as LeaderboardCategory
+    : "builders";
+  const year = allowedYears.includes(params.year as typeof allowedYears[number])
+    ? params.year as typeof allowedYears[number]
+    : "all";
+  const requestedPage = Number(params.page ?? "1");
+  const page = Number.isInteger(requestedPage) && requestedPage > 0 ? requestedPage : 1;
 
   const { users, total } = await getLeaderboard(tab, year, page, 25);
 
@@ -29,7 +36,7 @@ export default async function LeaderboardPage({ searchParams }: { searchParams: 
           LEADERBOARD
         </h1>
         <p className="font-mono text-xs uppercase tracking-wider text-white/40 mt-1">
-          All registered members // sorted by Stadion Points
+          Builders, LeetCoders, Codeforces toppers, and Arena records
         </p>
       </div>
 
@@ -41,7 +48,7 @@ export default async function LeaderboardPage({ searchParams }: { searchParams: 
           users={users}
           total={total}
           page={page}
-          showRankChange={tab === "all-time"}
+          category={tab}
         />
       </Suspense>
     </div>

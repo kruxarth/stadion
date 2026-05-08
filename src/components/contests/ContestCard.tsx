@@ -24,13 +24,11 @@ interface Props {
   startTime: Date;
   endTime: Date;
   currentUserId?: string;
-  currentUserPoints?: number;
-  currentUserAvailablePoints?: number;
 }
 
 export function ContestCard({
   platform, name, slug, startTime, endTime,
-  currentUserId, currentUserPoints = 0, currentUserAvailablePoints = 0,
+  currentUserId,
 }: Props) {
   const [countdown, setCountdown] = useState("");
   const [modalOpen, setModalOpen] = useState(false);
@@ -88,8 +86,6 @@ export function ContestCard({
           contestStart={startTime}
           contestEnd={endTime}
           currentUserId={currentUserId}
-          currentUserPoints={currentUserPoints}
-          currentUserAvailablePoints={currentUserAvailablePoints}
         />
       )}
     </>

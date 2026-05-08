@@ -24,16 +24,16 @@ const BADGE_DEFINITIONS = [
     },
   },
   {
-    slug: "leaderboard-legend",
-    name: "Leaderboard Legend",
-    description: "Sitting at the top",
+    slug: "duelist",
+    name: "Duelist",
+    description: "Won a ranked head-to-head challenge",
     icon_url: null,
     criteria: {
-      type: "monthly_winner",
-      field: "stadion_points",
+      type: "permanent",
+      field: "challenge_wins",
       scope: "all_users",
-      rank: 1,
-      award_key_format: "YYYY-MM",
+      minimum_wins: 1,
+      award_key_format: "once",
     },
   },
   {

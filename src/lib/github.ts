@@ -199,11 +199,11 @@ export async function fetchGitHubStats(
 
     if (contributionData.length === 0) return null;
 
-    // weekly_commits: last 7 days in contribution_data
+    // Stored in legacy *_commits columns, but sourced from GitHub contribution counts.
     const last7 = contributionData.slice(-7);
     const weekly_commits = last7.reduce((s, d) => s + d.count, 0);
 
-    // monthly_commits: entries whose date starts with current UTC YYYY-MM
+    // Current UTC month of GitHub contribution counts.
     const currentMonth = `${now.getUTCFullYear()}-${String(now.getUTCMonth() + 1).padStart(2, "0")}`;
     const monthly_commits = contributionData
       .filter((d) => d.date.startsWith(currentMonth))

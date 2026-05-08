@@ -1,8 +1,8 @@
 import { db } from "@/lib/db";
-import { challenges, users, stadionPointsLog } from "@/lib/db/schema";
-import { and, eq, lt, sql } from "drizzle-orm";
-import { fetchLeetCodeContestRank } from "@/lib/leetcode";
-import { fetchCodeforcesContestRank } from "@/lib/codeforces";
+import { challenges, users } from "@/lib/db/schema";
+import { and, eq, lt } from "drizzle-orm";
+import { fetchLeetCodeContestRankResult } from "@/lib/leetcode";
+import { fetchCodeforcesContestRankResult } from "@/lib/codeforces";
 import { verifyCronAuth } from "@/lib/cronAuth";
 
 export async function GET(request: Request) {
@@ -21,7 +21,6 @@ export async function GET(request: Request) {
       platform: challenges.platform,
       contest_id: challenges.contest_id,
       contest_name: challenges.contest_name,
-      points_wagered: challenges.points_wagered,
     })
     .from(challenges)
     .where(
@@ -44,7 +43,6 @@ export async function GET(request: Request) {
           columns: {
             leetcode_username: true,
             codeforces_handle: true,
-            stadion_points: true,
           },
         }),
         db.query.users.findFirst({
@@ -52,7 +50,6 @@ export async function GET(request: Request) {
           columns: {
             leetcode_username: true,
             codeforces_handle: true,
-            stadion_points: true,
           },
         }),
       ]);
@@ -65,6 +62,7 @@ export async function GET(request: Request) {
       // Fetch ranks for both users
       let challengerRank: number | null = null;
       let opponentRank: number | null = null;
+      let rankDataUnavailable = false;
 
       if (challenge.platform === "leetcode") {
         if (!challenger.leetcode_username || !opponent.leetcode_username) {
@@ -73,10 +71,13 @@ export async function GET(request: Request) {
           );
           continue;
         }
-        [challengerRank, opponentRank] = await Promise.all([
-          fetchLeetCodeContestRank(challenger.leetcode_username, challenge.contest_id),
-          fetchLeetCodeContestRank(opponent.leetcode_username, challenge.contest_id),
+        const [challengerResult, opponentResult] = await Promise.all([
+          fetchLeetCodeContestRankResult(challenger.leetcode_username, challenge.contest_id),
+          fetchLeetCodeContestRankResult(opponent.leetcode_username, challenge.contest_id),
         ]);
+        challengerRank = challengerResult.rank;
+        opponentRank = opponentResult.rank;
+        rankDataUnavailable = challengerResult.unavailable || opponentResult.unavailable;
       } else {
         // codeforces
         if (!challenger.codeforces_handle || !opponent.codeforces_handle) {
@@ -85,10 +86,20 @@ export async function GET(request: Request) {
           );
           continue;
         }
-        [challengerRank, opponentRank] = await Promise.all([
-          fetchCodeforcesContestRank(challenger.codeforces_handle, challenge.contest_id),
-          fetchCodeforcesContestRank(opponent.codeforces_handle, challenge.contest_id),
+        const [challengerResult, opponentResult] = await Promise.all([
+          fetchCodeforcesContestRankResult(challenger.codeforces_handle, challenge.contest_id),
+          fetchCodeforcesContestRankResult(opponent.codeforces_handle, challenge.contest_id),
         ]);
+        challengerRank = challengerResult.rank;
+        opponentRank = opponentResult.rank;
+        rankDataUnavailable = challengerResult.unavailable || opponentResult.unavailable;
+      }
+
+      if (rankDataUnavailable) {
+        console.warn(
+          `[resolve-challenges] Rank data unavailable for challenge ${challenge.id} — retrying later`,
+        );
+        continue;
       }
 
       // Determine outcome
@@ -110,8 +121,6 @@ export async function GET(request: Request) {
         winnerId = challenge.opponent_id;
       }
 
-      const wager = challenge.points_wagered;
-
       // Update challenge
       await db
         .update(challenges)
@@ -125,54 +134,14 @@ export async function GET(request: Request) {
         .where(eq(challenges.id, challenge.id));
 
       if (!isDraw && winnerId) {
-        const loserId =
-          winnerId === challenge.challenger_id
-            ? challenge.opponent_id
-            : challenge.challenger_id;
-
         const winnerName = winnerId === challenge.challenger_id ? "challenger" : "opponent";
         const loserName = winnerName === "challenger" ? "opponent" : "challenger";
 
-        // Log points changes for both users
-        await db.insert(stadionPointsLog).values([
-          {
-            user_id: winnerId,
-            source: "challenge",
-            delta: wager,
-            reason: `Won challenge vs ${loserName} in ${challenge.contest_name}`,
-            related_challenge_id: challenge.id,
-          },
-          {
-            user_id: loserId,
-            source: "challenge",
-            delta: -wager,
-            reason: `Lost challenge vs ${winnerName} in ${challenge.contest_name}`,
-            related_challenge_id: challenge.id,
-          },
-        ]);
-
-        // Apply points immediately (recalculate-points cron will also pick this up)
-        await db
-          .update(users)
-          .set({
-            stadion_points: sql`${users.stadion_points} + ${wager}`,
-            updated_at: now,
-          })
-          .where(eq(users.id, winnerId));
-
-        await db
-          .update(users)
-          .set({
-            stadion_points: sql`GREATEST(0, ${users.stadion_points} - ${wager})`,
-            updated_at: now,
-          })
-          .where(eq(users.id, loserId));
-
         console.log(
-          `[resolve-challenges] ${challenge.id}: winner=${winnerName}, wager=${wager}`,
+          `[resolve-challenges] ${challenge.id}: winner=${winnerName}, loser=${loserName}`,
         );
       } else {
-        console.log(`[resolve-challenges] ${challenge.id}: draw — no points exchanged`);
+        console.log(`[resolve-challenges] ${challenge.id}: draw`);
       }
 
       processed++;

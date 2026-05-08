@@ -6,36 +6,39 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import type { LeaderboardUser } from "@/lib/queries/leaderboard";
+import type { LeaderboardCategory, LeaderboardUser } from "@/lib/queries/leaderboard";
 
 const BADGE_EMOJI: Record<string, string> = {
   "commit-king": "👑",
-  "leaderboard-legend": "🏆",
+  "duelist": "⚔️",
   "arena-king": "⚔️",
   "cf-king": "🔵",
   "lc-king": "🟡",
   "alumni-legend": "🎓",
 };
 
-function RankChange({ change }: { change: number | null }) {
-  if (change === null)
-    return <span className="text-xs text-blue-400 font-medium">NEW</span>;
-  if (change === 0)
-    return <span className="text-xs text-muted-foreground">—</span>;
-  if (change > 0)
-    return <span className="text-xs text-green-400 font-medium">↑{change}</span>;
-  return <span className="text-xs text-red-400 font-medium">↓{Math.abs(change)}</span>;
-}
-
 interface Props {
   users: LeaderboardUser[];
   total: number;
   page: number;
   pageSize?: number;
-  showRankChange?: boolean;
+  category: LeaderboardCategory;
 }
 
-export function LeaderboardTable({ users, total, page, pageSize = 25, showRankChange = false }: Props) {
+function secondaryValue(user: LeaderboardUser, category: LeaderboardCategory): string {
+  if (category === "arena") {
+    return `${user.challenge_wins}W / ${user.challenge_losses}L / ${user.challenge_draws}D`;
+  }
+  if (category === "builders") {
+    return `${user.weekly_commits} contributions this week`;
+  }
+  if (category === "leetcode") {
+    return `${user.leetcode_rating ?? "unrated"} rating`;
+  }
+  return `${user.codeforces_rating ?? "unrated"} rating`;
+}
+
+export function LeaderboardTable({ users, total, page, pageSize = 25, category }: Props) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -58,14 +61,14 @@ export function LeaderboardTable({ users, total, page, pageSize = 25, showRankCh
           <thead className="bg-muted/50">
             <tr className="text-left text-xs text-muted-foreground uppercase tracking-wide">
               <th className="px-4 py-3 w-12">#</th>
-              {showRankChange && <th className="px-2 py-3 w-12" />}
               <th className="px-4 py-3">User</th>
               <th className="px-4 py-3 hidden md:table-cell">Dept</th>
               <th className="px-4 py-3 hidden sm:table-cell">Year</th>
-              <th className="px-4 py-3 text-right">SP</th>
-              <th className="px-4 py-3 text-right hidden sm:table-cell">Commits</th>
+              <th className="px-4 py-3 text-right">Score</th>
+              <th className="px-4 py-3 text-right hidden sm:table-cell">Contrib</th>
               <th className="px-4 py-3 text-right hidden md:table-cell">LC</th>
               <th className="px-4 py-3 text-right hidden md:table-cell">CF</th>
+              <th className="px-4 py-3 text-right hidden lg:table-cell">Arena</th>
               <th className="px-4 py-3 hidden lg:table-cell">Badges</th>
             </tr>
           </thead>
@@ -77,11 +80,6 @@ export function LeaderboardTable({ users, total, page, pageSize = 25, showRankCh
                 onClick={() => router.push(`/u/${user.username}`)}
               >
                 <td className="px-4 py-3 font-mono text-muted-foreground">{user.rank}</td>
-                {showRankChange && (
-                  <td className="px-2 py-3">
-                    <RankChange change={user.rankChange} />
-                  </td>
-                )}
                 <td className="px-4 py-3">
                   <div className="flex items-center gap-2.5">
                     <Avatar className="h-7 w-7 shrink-0">
@@ -104,16 +102,22 @@ export function LeaderboardTable({ users, total, page, pageSize = 25, showRankCh
                   {user.is_alumni ? "Alumni" : user.college_year ? `Y${user.college_year}` : "—"}
                 </td>
                 <td className="px-4 py-3 text-right font-semibold" style={{ color: "#63e4e0" }}>
-                  {user.stadion_points.toLocaleString()}
+                  <div>{user.score.toLocaleString()}</div>
+                  <div className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                    {secondaryValue(user, category)}
+                  </div>
                 </td>
                 <td className="px-4 py-3 text-right hidden sm:table-cell text-muted-foreground">
-                  {user.weekly_commits}
+                  {user.monthly_commits} mo / {user.weekly_commits} wk
                 </td>
                 <td className="px-4 py-3 text-right hidden md:table-cell text-muted-foreground">
                   {user.leetcode_rating ?? "—"}
                 </td>
                 <td className="px-4 py-3 text-right hidden md:table-cell text-muted-foreground">
                   {user.codeforces_rating ?? "—"}
+                </td>
+                <td className="px-4 py-3 text-right hidden lg:table-cell text-muted-foreground">
+                  {secondaryValue(user, "arena")}
                 </td>
                 <td className="px-4 py-3 hidden lg:table-cell">
                   <div className="flex items-center gap-0.5">

@@ -8,14 +8,14 @@ const FEATURES = [
     icon: GitBranch,
     title: "GITHUB TRACKING",
     description:
-      "Weekly + monthly commits, top languages, contribution heatmap. Auto-synced every 6 hours. No excuses.",
-    tag: "// COMMITS",
+      "Weekly + monthly GitHub contributions, top languages, contribution heatmap. Auto-synced every 6 hours. No excuses.",
+    tag: "// CONTRIBUTIONS",
   },
   {
     icon: Code2,
     title: "LC + CF RATINGS",
     description:
-      "Link your LeetCode and Codeforces. Ratings and problem counts feed directly into your Stadion score.",
+      "Link your LeetCode and Codeforces. Each platform gets its own honest ranking.",
     tag: "// COMPETITIVE",
   },
   {
@@ -29,7 +29,7 @@ const FEATURES = [
     icon: Swords,
     title: "1v1 CHALLENGES",
     description:
-      "Challenge anyone. Pick a contest. Wager Stadion Points. Winner takes all. Loser gets nothing.",
+      "Challenge anyone. Pick a contest. Wins, losses, draws, and rivalries go on the record.",
     tag: "// PVP",
   },
 ];

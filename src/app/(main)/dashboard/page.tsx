@@ -4,6 +4,7 @@ import { eq, or, and } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { githubStats, leetcodeStats, codeforcesStats, challenges } from "@/lib/db/schema";
 import { ensureUser } from "@/lib/ensureUser";
+import { resolveEndedChallenges } from "@/lib/challenges/resolve";
 import { getBuilderRank, getChallengeRecord } from "@/lib/queries/leaderboard";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -20,6 +21,8 @@ export const metadata = { title: "Dashboard — Stadion" };
 export default async function DashboardPage() {
   const user = await ensureUser();
   if (!user) redirect("/");
+
+  await resolveEndedChallenges({ userId: user.id, limit: 10 });
 
   const [gh, lc, cf, pendingChallenges, activeChallenges, challengeRecord] = await Promise.all([
     db.query.githubStats.findFirst({ where: eq(githubStats.user_id, user.id) }),

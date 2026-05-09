@@ -5,6 +5,7 @@ import { eq, or, and, sql } from "drizzle-orm";
 import { ensureUser } from "@/lib/ensureUser";
 import { fetchUpcomingLeetCodeContests } from "@/lib/leetcode";
 import { fetchUpcomingCodeforcesContests } from "@/lib/codeforces";
+import { resolveEndedChallenges } from "@/lib/challenges/resolve";
 
 export async function GET() {
   const { userId: clerkId } = await auth();
@@ -12,6 +13,8 @@ export async function GET() {
 
   const user = await db.query.users.findFirst({ where: eq(users.clerk_id, clerkId) });
   if (!user) return Response.json({ error: "User not found" }, { status: 404 });
+
+  await resolveEndedChallenges({ userId: user.id, limit: 10 });
 
   const userChallenges = await db
     .select()

@@ -4,6 +4,7 @@ import { users, challenges } from "@/lib/db/schema";
 import { eq, or, and } from "drizzle-orm";
 import { fetchUpcomingLeetCodeContests } from "@/lib/leetcode";
 import { fetchUpcomingCodeforcesContests } from "@/lib/codeforces";
+import { resolveEndedChallenges } from "@/lib/challenges/resolve";
 import { ContestCard } from "@/components/contests/ContestCard";
 import { Separator } from "@/components/ui/separator";
 
@@ -45,6 +46,8 @@ export default async function ContestsPage() {
     const user = await db.query.users.findFirst({ where: eq(users.clerk_id, clerkId) });
     if (user) {
       currentUserId = user.id;
+
+      await resolveEndedChallenges({ userId: user.id, limit: 10 });
 
       activeChallenges = await db.select().from(challenges).where(
         and(

@@ -18,6 +18,7 @@ import {
 import { eq, and, or, desc, sql } from "drizzle-orm";
 import type { ContributionDay } from "@/lib/github";
 import { getBuilderRank, getChallengeRecord } from "@/lib/queries/leaderboard";
+import { resolveEndedChallenges } from "@/lib/challenges/resolve";
 
 const BADGE_EMOJI: Record<string, string> = {
   "commit-king": "👑", "duelist": "⚔️", "arena-king": "⚔️",
@@ -34,6 +35,8 @@ export default async function ProfilePage({ params }: { params: Promise<{ userna
 
   const user = await db.query.users.findFirst({ where: eq(users.username, username) });
   if (!user) notFound();
+
+  await resolveEndedChallenges({ userId: user.id, limit: 10 });
 
   const [gh, lc, cf, earnedBadges, recentChallenges, challengeRecord] = await Promise.all([
     db.query.githubStats.findFirst({ where: eq(githubStats.user_id, user.id) }),

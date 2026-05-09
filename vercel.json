@@ -1,31 +1,7 @@
 {
   "crons": [
     {
-      "path": "/api/cron/sync-github",
-      "schedule": "0 */6 * * *"
-    },
-    {
-      "path": "/api/cron/sync-leetcode",
-      "schedule": "0 */6 * * *"
-    },
-    {
-      "path": "/api/cron/sync-codeforces",
-      "schedule": "0 */6 * * *"
-    },
-    {
-      "path": "/api/cron/expire-challenges",
-      "schedule": "*/30 * * * *"
-    },
-    {
-      "path": "/api/cron/resolve-challenges",
-      "schedule": "*/30 * * * *"
-    },
-    {
-      "path": "/api/cron/check-alumni",
-      "schedule": "0 0 * * *"
-    },
-    {
-      "path": "/api/cron/award-badges",
+      "path": "/api/cron/daily",
       "schedule": "0 0 * * *"
     }
   ]

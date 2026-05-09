@@ -10,7 +10,7 @@ export function Footer() {
           <span className="font-mono text-xs uppercase tracking-wider text-white/40">
             Built by{" "}
             <Link
-              href="https://ccube.dev"
+              href="https://c-cube.geca.ac.in/"
               target="_blank"
               rel="noopener noreferrer"
               className="text-[#63e4e0] hover:text-white transition-colors"

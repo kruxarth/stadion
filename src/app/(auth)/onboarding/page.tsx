@@ -16,7 +16,7 @@ export default async function OnboardingPage() {
   // Already onboarded — go straight to dashboard
   if (
     user.department !== null &&
-    user.college_year !== null &&
+    user.program !== null &&
     user.graduation_year !== null
   ) {
     redirect("/dashboard");

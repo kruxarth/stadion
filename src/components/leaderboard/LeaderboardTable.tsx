@@ -17,6 +17,12 @@ const BADGE_EMOJI: Record<string, string> = {
   "alumni-legend": "🎓",
 };
 
+const PROGRAM_LABELS: Record<string, string> = {
+  btech: "B.Tech",
+  mtech: "M.Tech",
+  mca: "MCA",
+};
+
 interface Props {
   users: LeaderboardUser[];
   total: number;
@@ -101,7 +107,11 @@ export function LeaderboardTable({ users, total, page, pageSize = 25, category }
                   {user.department ?? "—"}
                 </td>
                 <td className="px-4 py-3 hidden sm:table-cell text-muted-foreground text-xs">
-                  {user.is_alumni ? "Alumni" : user.college_year ? `Y${user.college_year}` : "—"}
+                  {user.is_alumni
+                    ? "Alumni"
+                    : user.college_year
+                      ? `${PROGRAM_LABELS[user.program] ?? user.program} Y${user.college_year}`
+                      : PROGRAM_LABELS[user.program] ?? "—"}
                 </td>
                 <td className="px-4 py-3 text-right font-semibold" style={{ color: "#63e4e0" }}>
                   <div>{user.score.toLocaleString()}</div>

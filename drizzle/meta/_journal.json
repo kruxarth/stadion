@@ -15,6 +15,13 @@
       "when": 1778237208273,
       "tag": "0001_pale_angel",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1778400572407,
+      "tag": "0002_charming_pestilence",
+      "breakpoints": true
     }
   ]
 }

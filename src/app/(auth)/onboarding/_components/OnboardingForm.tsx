@@ -11,6 +11,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { PROGRAMS, deriveAcademicStatus, getAcademicStartYear } from "@/lib/academicYear";
 
 const DEPARTMENTS = [
   "Computer Science",
@@ -23,17 +24,21 @@ const DEPARTMENTS = [
   "Other",
 ];
 
-const CURRENT_YEAR = new Date().getFullYear();
+const ACADEMIC_START_YEAR = getAcademicStartYear();
 
 export function OnboardingForm({ githubUsername }: { githubUsername: string }) {
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
 
   const [department, setDepartment] = useState("");
-  const [collegeYear, setCollegeYear] = useState("");
+  const [program, setProgram] = useState("");
   const [graduationYear, setGraduationYear] = useState("");
   const [leetcodeUsername, setLeetcodeUsername] = useState("");
   const [codeforcesHandle, setCodeforcesHandle] = useState("");
+  const graduationYearNumber = Number(graduationYear);
+  const calculatedStatus = program && graduationYear && !Number.isNaN(graduationYearNumber)
+    ? deriveAcademicStatus({ graduationYear: graduationYearNumber, program })
+    : null;
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -43,8 +48,8 @@ export function OnboardingForm({ githubUsername }: { githubUsername: string }) {
       setError("Select your department.");
       return;
     }
-    if (!collegeYear) {
-      setError("Select your current year.");
+    if (!program) {
+      setError("Select your program.");
       return;
     }
     if (!graduationYear || isNaN(Number(graduationYear))) {
@@ -56,7 +61,7 @@ export function OnboardingForm({ githubUsername }: { githubUsername: string }) {
       try {
         await completeOnboarding({
           department,
-          college_year: Number(collegeYear),
+          program,
           graduation_year: Number(graduationYear),
           leetcode_username: leetcodeUsername,
           codeforces_handle: codeforcesHandle,
@@ -88,25 +93,19 @@ export function OnboardingForm({ githubUsername }: { githubUsername: string }) {
         </Select>
       </div>
 
-      {/* College Year */}
+      {/* Program */}
       <div className="space-y-2">
-        <Label htmlFor="college_year" className="font-mono text-[10px] uppercase tracking-[0.2em] text-white/60">
-          Current Year
+        <Label htmlFor="program" className="font-mono text-[10px] uppercase tracking-[0.2em] text-white/60">
+          Program
         </Label>
-        <Select value={collegeYear} onValueChange={(v) => setCollegeYear(v ?? "")}>
-          <SelectTrigger id="college_year" className="w-full font-mono text-sm">
-            <SelectValue placeholder="Select your year" />
+        <Select value={program} onValueChange={(v) => setProgram(v ?? "")}>
+          <SelectTrigger id="program" className="w-full font-mono text-sm">
+            <SelectValue placeholder="Select your program" />
           </SelectTrigger>
           <SelectContent>
-            {[1, 2, 3, 4].map((y) => (
-              <SelectItem key={y} value={String(y)}>
-                {y === 1
-                  ? "1st Year"
-                  : y === 2
-                    ? "2nd Year"
-                    : y === 3
-                      ? "3rd Year"
-                      : "4th Year"}
+            {PROGRAMS.map((p) => (
+              <SelectItem key={p.value} value={p.value}>
+                {p.label}
               </SelectItem>
             ))}
           </SelectContent>
@@ -121,14 +120,28 @@ export function OnboardingForm({ githubUsername }: { githubUsername: string }) {
         <Input
           id="graduation_year"
           type="number"
-          placeholder={String(CURRENT_YEAR + 1)}
-          min={CURRENT_YEAR}
-          max={CURRENT_YEAR + 6}
+          placeholder={String(ACADEMIC_START_YEAR + 1)}
+          min={ACADEMIC_START_YEAR + 1}
+          max={ACADEMIC_START_YEAR + 6}
           value={graduationYear}
           onChange={(e) => setGraduationYear(e.target.value)}
           className="font-mono text-sm"
         />
       </div>
+
+      {calculatedStatus && (
+        <p className="font-mono text-[10px] uppercase tracking-wider text-white/35">
+          Calculated year:{" "}
+          <span className="text-[#63e4e0]">
+            {calculatedStatus.isAlumni
+              ? "Alumni"
+              : calculatedStatus.collegeYear
+                ? `Year ${calculatedStatus.collegeYear}`
+                : "Outside program range"}
+          </span>{" "}
+          // updates every July 1
+        </p>
+      )}
 
       {/* LeetCode */}
       <div className="space-y-2">

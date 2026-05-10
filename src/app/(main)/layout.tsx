@@ -17,7 +17,7 @@ export default async function MainLayout({
   // If onboarding is incomplete, redirect to onboarding
   if (
     user.department === null ||
-    user.college_year === null ||
+    user.program === null ||
     user.graduation_year === null
   ) {
     redirect("/onboarding");

@@ -11,6 +11,12 @@ interface LeaderboardPreviewProps {
   users: LeaderboardUser[];
 }
 
+const PROGRAM_LABELS: Record<string, string> = {
+  btech: "B.Tech",
+  mtech: "M.Tech",
+  mca: "MCA",
+};
+
 function RankBadge({ rank }: { rank: number }) {
   const labels: Record<number, string> = {
     1: "#01",
@@ -106,7 +112,12 @@ export function LeaderboardPreview({ users }: LeaderboardPreviewProps) {
                         {user.full_name}
                       </p>
                       <p className="font-mono text-[10px] text-white/30 uppercase tracking-wider">
-                        {user.department ?? "---"} / {user.college_year ? `Y${user.college_year}` : "ALUM"}
+                        {user.department ?? "---"} /{" "}
+                        {user.is_alumni
+                          ? "ALUM"
+                          : user.college_year
+                            ? `${PROGRAM_LABELS[user.program] ?? user.program} Y${user.college_year}`
+                            : PROGRAM_LABELS[user.program] ?? "---"}
                       </p>
                     </div>
                     <div className="text-right shrink-0">

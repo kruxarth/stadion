@@ -12,6 +12,7 @@ You can participate by:
 
 - signing in with GitHub
 - completing your profile during onboarding
+- selecting your program and expected graduation year so Stadion can calculate your current year automatically
 - linking your LeetCode username and Codeforces handle from settings
 - keeping your public coding profiles active
 - joining upcoming LeetCode and Codeforces contests
@@ -101,6 +102,16 @@ Each profile shows a participant's public Stadion activity:
 - top repository and language signals where available
 
 Use profiles to see how someone is competing, not just where they rank.
+
+## College Year
+
+Stadion asks for your program and expected graduation year, then calculates your current year automatically. The academic year rolls over on July 1.
+
+- B.Tech is treated as a 4-year program.
+- M.Tech is treated as a 2-year program.
+- MCA is treated as a 2-year program.
+
+Department is still collected for display and filtering, but it is not used to calculate year.
 
 ## Keeping Your Stats Accurate
 

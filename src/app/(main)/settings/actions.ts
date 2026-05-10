@@ -7,12 +7,13 @@ import { ensureUser } from "@/lib/ensureUser";
 import { fetchGitHubStats } from "@/lib/github";
 import { fetchLeetCodeStats } from "@/lib/leetcode";
 import { fetchCodeforcesStats } from "@/lib/codeforces";
+import { deriveAcademicStatus, PROGRAMS } from "@/lib/academicYear";
 
 export interface SettingsData {
   leetcode_username: string;
   codeforces_handle: string;
   department: string;
-  college_year: string;
+  program: string;
   graduation_year: string;
 }
 
@@ -20,9 +21,18 @@ export async function updateSettings(data: SettingsData): Promise<{ success: boo
   const user = await ensureUser();
   if (!user) return { success: false, error: "Not authenticated" };
 
-  const college_year = data.college_year ? Number(data.college_year) : null;
-  if (college_year !== null && (college_year < 1 || college_year > 4)) {
-    return { success: false, error: "College year must be between 1 and 4" };
+  if (!PROGRAMS.some((p) => p.value === data.program)) {
+    return { success: false, error: "Select a valid program" };
+  }
+
+  const graduationYear = data.graduation_year ? Number(data.graduation_year) : null;
+  const academicStatus = deriveAcademicStatus({
+    graduationYear,
+    program: data.program,
+  });
+
+  if (graduationYear && academicStatus.collegeYear === null && !academicStatus.isAlumni) {
+    return { success: false, error: "Graduation year does not match the selected program" };
   }
 
   const lcUsernameChanged = data.leetcode_username.trim() !== (user.leetcode_username ?? "");
@@ -32,8 +42,10 @@ export async function updateSettings(data: SettingsData): Promise<{ success: boo
     leetcode_username: data.leetcode_username.trim() || null,
     codeforces_handle: data.codeforces_handle.trim() || null,
     department: data.department.trim() || null,
-    college_year,
-    graduation_year: data.graduation_year ? Number(data.graduation_year) : null,
+    program: data.program,
+    college_year: academicStatus.collegeYear,
+    graduation_year: graduationYear,
+    is_alumni: academicStatus.isAlumni,
     updated_at: new Date(),
   }).where(eq(users.id, user.id));
 

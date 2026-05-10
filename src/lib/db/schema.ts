@@ -24,6 +24,8 @@ export const users = pgTable(
     github_username: text("github_username").unique().notNull(),
     leetcode_username: text("leetcode_username"),
     codeforces_handle: text("codeforces_handle"),
+    // 'btech' | 'mtech' | 'mca'
+    program: text("program").default("btech").notNull(),
     department: text("department"),
     // null until onboarding is completed
     college_year: integer("college_year"),
@@ -40,6 +42,10 @@ export const users = pgTable(
     check(
       "college_year_range",
       sql`${table.college_year} IS NULL OR (${table.college_year} >= 1 AND ${table.college_year} <= 4)`,
+    ),
+    check(
+      "program_check",
+      sql`${table.program} IN ('btech', 'mtech', 'mca')`,
     ),
   ],
 );

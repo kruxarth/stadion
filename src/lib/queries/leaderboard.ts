@@ -4,6 +4,8 @@ import { currentAwardKey, summarizeBadgeAwards } from "@/lib/badgeDisplay";
 import { and, desc, eq, or, sql } from "drizzle-orm";
 
 export type LeaderboardCategory = "builders" | "leetcode" | "codeforces" | "arena";
+export type LeaderboardYearFilter = "all" | "1" | "2" | "3" | "4" | "alumni";
+export type LeaderboardProgramFilter = "all" | "btech" | "mtech" | "mca";
 
 export interface LeaderboardUser {
   rank: number;
@@ -11,6 +13,7 @@ export interface LeaderboardUser {
   username: string;
   full_name: string;
   avatar_url: string | null;
+  program: string;
   department: string | null;
   college_year: number | null;
   is_alumni: boolean;
@@ -34,10 +37,24 @@ export interface LeaderboardUser {
   }>;
 }
 
-function yearCondition(yearFilter: "all" | "1" | "2" | "3" | "4" | "alumni") {
-  if (yearFilter === "alumni") return sql`${users.is_alumni} = TRUE`;
-  if (yearFilter !== "all") return sql`${users.college_year} = ${Number(yearFilter)}`;
-  return sql`TRUE`;
+function leaderboardCondition(
+  yearFilter: LeaderboardYearFilter,
+  programFilter: LeaderboardProgramFilter,
+) {
+  const conditions = [];
+
+  if (yearFilter === "alumni") {
+    conditions.push(eq(users.is_alumni, true));
+  } else if (yearFilter !== "all") {
+    conditions.push(eq(users.college_year, Number(yearFilter)));
+    conditions.push(eq(users.is_alumni, false));
+  }
+
+  if (programFilter !== "all") {
+    conditions.push(eq(users.program, programFilter));
+  }
+
+  return conditions.length > 0 ? and(...conditions)! : sql`TRUE`;
 }
 
 function currentMonthRange() {
@@ -62,12 +79,13 @@ function scoreLabel(category: LeaderboardCategory): string {
 
 export async function getLeaderboard(
   category: LeaderboardCategory,
-  yearFilter: "all" | "1" | "2" | "3" | "4" | "alumni",
+  yearFilter: LeaderboardYearFilter,
   page: number,
   pageSize: number = 25,
+  programFilter: LeaderboardProgramFilter = "all",
 ): Promise<{ users: LeaderboardUser[]; total: number }> {
   const { start: monthStart, end: monthEnd } = currentMonthRange();
-  const filter = yearCondition(yearFilter);
+  const filter = leaderboardCondition(yearFilter, programFilter);
   const offset = (page - 1) * pageSize;
 
   const monthlyWins = sql<number>`COALESCE(COUNT(${challenges.id}) FILTER (
@@ -107,6 +125,7 @@ export async function getLeaderboard(
       username: users.username,
       full_name: users.full_name,
       avatar_url: users.avatar_url,
+      program: users.program,
       department: users.department,
       college_year: users.college_year,
       is_alumni: users.is_alumni,
@@ -195,6 +214,7 @@ export async function getLeaderboard(
       username: row.username,
       full_name: row.full_name,
       avatar_url: row.avatar_url,
+      program: row.program,
       department: row.department,
       college_year: row.college_year,
       is_alumni: row.is_alumni,

@@ -11,19 +11,27 @@ const TABS = [
 
 const YEARS = [
   { value: "all", label: "All Years" },
-  { value: "1", label: "1st Year" },
-  { value: "2", label: "2nd Year" },
-  { value: "3", label: "3rd Year" },
-  { value: "4", label: "4th Year" },
+  { value: "1", label: "Y1" },
+  { value: "2", label: "Y2" },
+  { value: "3", label: "Y3" },
+  { value: "4", label: "Y4" },
   { value: "alumni", label: "Alumni" },
+] as const;
+
+const PROGRAMS = [
+  { value: "all", label: "All Programs" },
+  { value: "btech", label: "B.Tech" },
+  { value: "mtech", label: "M.Tech" },
+  { value: "mca", label: "MCA" },
 ] as const;
 
 interface Props {
   currentTab: string;
   currentYear: string;
+  currentProgram: string;
 }
 
-export function LeaderboardControls({ currentTab, currentYear }: Props) {
+export function LeaderboardControls({ currentTab, currentYear, currentProgram }: Props) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -36,9 +44,9 @@ export function LeaderboardControls({ currentTab, currentYear }: Props) {
   }
 
   return (
-    <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center">
+    <div className="flex flex-col gap-3">
       {/* Tab switcher */}
-      <div className="flex rounded-lg border border-border overflow-hidden text-sm">
+      <div className="flex w-fit max-w-full overflow-x-auto rounded-lg border border-border text-sm">
         {TABS.map((t) => (
           <button
             key={t.value}
@@ -54,21 +62,40 @@ export function LeaderboardControls({ currentTab, currentYear }: Props) {
         ))}
       </div>
 
-      {/* Year filter */}
-      <div className="flex rounded-lg border border-border overflow-hidden text-sm">
-        {YEARS.map((y) => (
-          <button
-            key={y.value}
-            onClick={() => update("year", y.value)}
-            className={`px-3 py-2 transition-colors ${
-              currentYear === y.value
-                ? "bg-muted font-medium"
-                : "hover:bg-muted/60 text-muted-foreground"
-            }`}
-          >
-            {y.label}
-          </button>
-        ))}
+      <div className="flex flex-col sm:flex-row gap-3">
+        {/* Program filter */}
+        <div className="flex w-fit max-w-full overflow-x-auto rounded-lg border border-border text-sm">
+          {PROGRAMS.map((program) => (
+            <button
+              key={program.value}
+              onClick={() => update("program", program.value)}
+              className={`whitespace-nowrap px-3 py-2 transition-colors ${
+                currentProgram === program.value
+                  ? "bg-muted font-medium"
+                  : "hover:bg-muted/60 text-muted-foreground"
+              }`}
+            >
+              {program.label}
+            </button>
+          ))}
+        </div>
+
+        {/* Year filter */}
+        <div className="flex w-fit max-w-full overflow-x-auto rounded-lg border border-border text-sm">
+          {YEARS.map((y) => (
+            <button
+              key={y.value}
+              onClick={() => update("year", y.value)}
+              className={`whitespace-nowrap px-3 py-2 transition-colors ${
+                currentYear === y.value
+                  ? "bg-muted font-medium"
+                  : "hover:bg-muted/60 text-muted-foreground"
+              }`}
+            >
+              {y.label}
+            </button>
+          ))}
+        </div>
       </div>
     </div>
   );

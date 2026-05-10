@@ -1,0 +1,2 @@
+ALTER TABLE "users" ADD COLUMN "program" text DEFAULT 'btech' NOT NULL;--> statement-breakpoint
+ALTER TABLE "users" ADD CONSTRAINT "program_check" CHECK ("users"."program" IN ('btech', 'mtech', 'mca'));

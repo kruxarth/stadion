@@ -9,12 +9,15 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { RefreshCw } from "lucide-react";
 import type { User } from "@/lib/db/schema";
+import { PROGRAMS, deriveAcademicStatus, getAcademicStartYear } from "@/lib/academicYear";
 
 const DEPARTMENTS = [
   "Computer Science", "Information Technology", "Electronics & Communication",
   "Electrical Engineering", "Mechanical Engineering", "Civil Engineering",
   "Chemical Engineering", "Other",
 ];
+
+const ACADEMIC_START_YEAR = getAcademicStartYear();
 
 export function SettingsForm({ user }: { user: User }) {
   const [isPending, startTransition] = useTransition();
@@ -33,8 +36,12 @@ export function SettingsForm({ user }: { user: User }) {
   const [lcUsername, setLcUsername] = useState(user.leetcode_username ?? "");
   const [cfHandle, setCfHandle] = useState(user.codeforces_handle ?? "");
   const [department, setDepartment] = useState(user.department ?? "");
-  const [collegeYear, setCollegeYear] = useState(user.college_year ? String(user.college_year) : "");
+  const [program, setProgram] = useState(user.program ?? "btech");
   const [graduationYear, setGraduationYear] = useState(user.graduation_year ? String(user.graduation_year) : "");
+  const graduationYearNumber = Number(graduationYear);
+  const calculatedStatus = graduationYear && !Number.isNaN(graduationYearNumber)
+    ? deriveAcademicStatus({ graduationYear: graduationYearNumber, program })
+    : null;
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -43,7 +50,7 @@ export function SettingsForm({ user }: { user: User }) {
         leetcode_username: lcUsername,
         codeforces_handle: cfHandle,
         department,
-        college_year: collegeYear,
+        program,
         graduation_year: graduationYear,
       });
       if (result.success) {
@@ -77,19 +84,15 @@ export function SettingsForm({ user }: { user: User }) {
           </SelectContent>
         </Select>
       </div>
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="space-y-2">
-          <Label htmlFor="year">Current Year</Label>
-          <Select value={collegeYear} onValueChange={(v) => setCollegeYear(v ?? "")}>
-            <SelectTrigger id="year" className="w-full">
-              <SelectValue placeholder="Year" />
+          <Label htmlFor="program">Program</Label>
+          <Select value={program} onValueChange={(v) => setProgram(v ?? "btech")}>
+            <SelectTrigger id="program" className="w-full">
+              <SelectValue placeholder="Program" />
             </SelectTrigger>
             <SelectContent>
-              {[1, 2, 3, 4].map((y) => (
-                <SelectItem key={y} value={String(y)}>
-                  {y === 1 ? "1st" : y === 2 ? "2nd" : y === 3 ? "3rd" : "4th"} Year
-                </SelectItem>
-              ))}
+              {PROGRAMS.map((p) => <SelectItem key={p.value} value={p.value}>{p.label}</SelectItem>)}
             </SelectContent>
           </Select>
         </div>
@@ -97,9 +100,22 @@ export function SettingsForm({ user }: { user: User }) {
           <Label htmlFor="grad">Graduation Year</Label>
           <Input id="grad" type="number" value={graduationYear}
             onChange={(e) => setGraduationYear(e.target.value)}
-            min={new Date().getFullYear()} max={new Date().getFullYear() + 6} />
+            min={ACADEMIC_START_YEAR + 1} max={ACADEMIC_START_YEAR + 6} />
         </div>
       </div>
+      <p className="text-xs text-muted-foreground">
+        Current year is calculated automatically from your program and graduation year. It rolls over on July 1.
+        {calculatedStatus && (
+          <span className="ml-1 text-[#63e4e0]">
+            Current value:{" "}
+            {calculatedStatus.isAlumni
+              ? "Alumni"
+              : calculatedStatus.collegeYear
+                ? `Year ${calculatedStatus.collegeYear}`
+                : "outside program range"}
+          </span>
+        )}
+      </p>
       <div className="flex gap-3">
         <Button type="submit" disabled={isPending} className="flex-1"
           style={{ backgroundColor: "#63e4e0", color: "#293a4e" }}>

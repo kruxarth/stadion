@@ -18,6 +18,13 @@ export const metadata: Metadata = {
   title: "Stadion — Compete. Code. Climb.",
   description:
     "A competitive coding leaderboard for college developers, built under the C Cube club initiative.",
+  icons: {
+    icon: [
+      { url: "/favicon.ico", sizes: "any" },
+      { url: "/icon.png", type: "image/png", sizes: "300x300" },
+    ],
+    apple: [{ url: "/apple-icon.png", type: "image/png", sizes: "300x300" }],
+  },
 };
 
 const clerkAppearance = {

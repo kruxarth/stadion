@@ -1,7 +1,9 @@
-import type { Challenge } from "@/lib/db/schema";
+import Link from "next/link";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import type { ChallengeWithUsers } from "./PendingChallenges";
 
 interface Props {
-  challenges: Challenge[];
+  challenges: ChallengeWithUsers[];
   currentUserId: string;
 }
 
@@ -22,10 +24,32 @@ export function ActiveChallenges({ challenges, currentUserId }: Props) {
     <ul className="space-y-3">
       {challenges.map((c) => {
         const role = c.challenger_id === currentUserId ? "Challenger" : "Opponent";
+        const otherUser = c.challenger_id === currentUserId ? c.opponent : c.challenger;
         return (
           <li key={c.id} className="rounded-lg border border-border p-3 text-sm">
             <div className="flex items-start justify-between gap-2">
-              <div>
+              <div className="min-w-0">
+                <div className="flex items-center gap-2 mb-3">
+                  <Avatar className="h-7 w-7">
+                    <AvatarImage src={otherUser?.avatar_url ?? undefined} />
+                    <AvatarFallback className="text-xs">
+                      {otherUser?.full_name[0] ?? "?"}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="min-w-0">
+                    {otherUser ? (
+                      <Link
+                        href={`/u/${otherUser.username}`}
+                        className="font-medium hover:text-[#63e4e0] transition-colors"
+                      >
+                        vs @{otherUser.username}
+                      </Link>
+                    ) : (
+                      <p className="font-medium">Opponent unavailable</p>
+                    )}
+                    <p className="text-muted-foreground text-xs truncate">{role}</p>
+                  </div>
+                </div>
                 <p className="font-medium">{c.contest_name}</p>
                 <p className="text-muted-foreground text-xs mt-0.5">
                   {c.platform} · {role} · ranked

@@ -1,5 +1,6 @@
 import { db } from "@/lib/db";
 import { users, githubStats, leetcodeStats, codeforcesStats, userBadges, badges, challenges } from "@/lib/db/schema";
+import { currentAwardKey, summarizeBadgeAwards } from "@/lib/badgeDisplay";
 import { and, desc, eq, or, sql } from "drizzle-orm";
 
 export type LeaderboardCategory = "builders" | "leetcode" | "codeforces" | "arena";
@@ -22,7 +23,15 @@ export interface LeaderboardUser {
   challenge_wins: number;
   challenge_losses: number;
   challenge_draws: number;
-  badges: Array<{ slug: string; name: string; icon_url: string | null }>;
+  badges: Array<{
+    slug: string;
+    name: string;
+    description: string;
+    icon_url: string | null;
+    count: number;
+    awardLabels: string[];
+    isCurrent: boolean;
+  }>;
 }
 
 function yearCondition(yearFilter: "all" | "1" | "2" | "3" | "4" | "alumni") {
@@ -137,28 +146,44 @@ export async function getLeaderboard(
   const total = Number(countResult[0]?.count ?? 0);
 
   const userIds = rows.map((r) => r.id);
-  const badgeMap = new Map<string, Array<{ slug: string; name: string; icon_url: string | null }>>();
+  const badgeMap = new Map<string, Array<{
+    slug: string;
+    name: string;
+    description: string;
+    icon_url: string | null;
+    count: number;
+    awardLabels: string[];
+    isCurrent: boolean;
+  }>>();
 
   if (userIds.length > 0) {
+    const current = currentAwardKey();
     const badgeRows = await db
       .select({
         user_id: userBadges.user_id,
         slug: badges.slug,
         name: badges.name,
+        description: badges.description,
         icon_url: badges.icon_url,
+        award_key: userBadges.award_key,
+        awarded_at: userBadges.awarded_at,
       })
       .from(userBadges)
       .innerJoin(badges, eq(badges.id, userBadges.badge_id))
       .where(
-        sql`${userBadges.user_id} = ANY(${sql.raw(`ARRAY[${userIds.map((id) => `'${id}'`).join(",")}]::uuid[]`)})`,
+        and(
+          sql`${userBadges.user_id} = ANY(${sql.raw(`ARRAY[${userIds.map((id) => `'${id}'`).join(",")}]::uuid[]`)})`,
+          or(eq(userBadges.award_key, "once"), eq(userBadges.award_key, current)),
+        ),
       );
 
-    for (const b of badgeRows) {
-      if (!badgeMap.has(b.user_id)) badgeMap.set(b.user_id, []);
-      const existing = badgeMap.get(b.user_id)!;
-      if (!existing.find((e) => e.slug === b.slug)) {
-        existing.push({ slug: b.slug, name: b.name, icon_url: b.icon_url });
-      }
+    const awardsByUser = new Map<string, typeof badgeRows>();
+    for (const row of badgeRows) {
+      awardsByUser.set(row.user_id, [...(awardsByUser.get(row.user_id) ?? []), row]);
+    }
+
+    for (const [userId, awards] of awardsByUser.entries()) {
+      badgeMap.set(userId, summarizeBadgeAwards(awards));
     }
   }
 

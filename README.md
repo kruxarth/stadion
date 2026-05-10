@@ -1,36 +1,122 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Stadion
 
-## Getting Started
+Stadion is C Cube's competitive coding leaderboard for college developers.
 
-First, run the development server:
+Connect your GitHub, LeetCode, and Codeforces profiles, keep building, compete in contests, challenge friends head-to-head, and collect badges for standout performance.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## Who Can Participate
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Stadion is for college developers who want a shared scoreboard for coding activity and competitive programming.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+You can participate by:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- signing in with GitHub
+- completing your profile during onboarding
+- linking your LeetCode username and Codeforces handle from settings
+- keeping your public coding profiles active
+- joining upcoming LeetCode and Codeforces contests
+- challenging other Stadion members before a contest starts
 
-## Learn More
+## What Stadion Tracks
 
-To learn more about Next.js, take a look at the following resources:
+Stadion pulls activity from three places:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- **GitHub**: weekly and monthly contributions, top languages, and contribution history
+- **LeetCode**: contest rating, solved problems, and contest activity
+- **Codeforces**: rating, max rating, rank, and contest activity
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Stats are synced periodically, so your dashboard may not update instantly after every commit or contest.
 
-## Deploy on Vercel
+## Leaderboards
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+The leaderboard has separate rankings for different kinds of performance:
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- **Builders**: ranked by GitHub contributions this month
+- **LeetCode**: ranked by LeetCode contest rating
+- **Codeforces**: ranked by Codeforces rating
+- **Arena**: ranked by challenge wins in the current month
+
+You can also filter rankings by college year or view alumni separately.
+
+### Builders
+
+The Builders leaderboard rewards consistent project work. Monthly GitHub contributions decide the main rank, with recent weekly contributions shown as supporting context.
+
+### LeetCode
+
+The LeetCode leaderboard uses your LeetCode contest rating. If you have not linked your LeetCode username or do not have a contest rating yet, you may appear as unrated.
+
+### Codeforces
+
+The Codeforces leaderboard uses your current Codeforces rating. Link your Codeforces handle in settings to be included properly.
+
+### Arena
+
+The Arena leaderboard is based on completed head-to-head challenges. A win is counted when you beat your opponent in the linked contest.
+
+## Challenges
+
+Challenges let two Stadion users turn an upcoming LeetCode or Codeforces contest into a head-to-head matchup.
+
+How it works:
+
+1. Go to the contests page.
+2. Pick an upcoming LeetCode or Codeforces contest.
+3. Challenge another Stadion user.
+4. The opponent accepts or declines before the contest starts.
+5. Both users participate in the contest on the original platform.
+6. After the contest ends, Stadion checks both contest ranks.
+7. The user with the better rank wins the challenge.
+
+If both users have the same rank, the challenge is recorded as a draw. If only one user has a valid rank, that user wins. If contest rank data is temporarily unavailable, Stadion retries later.
+
+Challenges must be created and accepted before the contest starts. Both users must have the relevant platform profile linked.
+
+## Badges
+
+Badges are awarded automatically from platform stats and challenge results. Some badges can be earned once, while monthly badges can be earned again in different months.
+
+Current badges:
+
+| Badge | How to earn it |
+|---|---|
+| **Commit King** | Have the most GitHub contributions in the college for the month |
+| **Duelist** | Win at least one ranked head-to-head challenge |
+| **Arena King** | Have the most challenge wins in a month, with at least 3 wins |
+| **CF King** | Hold the highest Codeforces rating in the college for the month |
+| **LC King** | Hold the highest LeetCode contest rating in the college for the month |
+| **Alumni Legend** | Become marked as alumni |
+
+Monthly badges are kept as history. Profiles group repeat wins with counts like `Commit King x3` and show the months earned. Leaderboards show permanent badges plus monthly badges earned in the current UTC month, so old titles do not look like current crowns.
+
+## Profiles
+
+Each profile shows a participant's public Stadion activity:
+
+- GitHub contribution history
+- LeetCode and Codeforces stats
+- earned badges
+- challenge record
+- recent challenge history
+- top repository and language signals where available
+
+Use profiles to see how someone is competing, not just where they rank.
+
+## Keeping Your Stats Accurate
+
+For the best Stadion experience:
+
+- keep your GitHub profile connected through sign-in
+- add your LeetCode username in settings
+- add your Codeforces handle in settings
+- make sure your linked platform usernames are correct
+- participate in contests with the same linked accounts
+- wait for the next sync if a fresh result is not visible yet
+
+If a platform API is delayed or unavailable, Stadion keeps the existing data and retries on a later sync.
+
+## Fair Play
+
+Stadion depends on public platform data. Use your own accounts, keep profile links honest, and compete in the original contest platforms normally.
+
+The goal is simple: build more, compete more, and make progress visible.

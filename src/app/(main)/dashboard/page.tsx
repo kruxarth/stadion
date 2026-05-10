@@ -1,8 +1,8 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { eq, or, and } from "drizzle-orm";
+import { eq, or, and, sql } from "drizzle-orm";
 import { db } from "@/lib/db";
-import { githubStats, leetcodeStats, codeforcesStats, challenges } from "@/lib/db/schema";
+import { githubStats, leetcodeStats, codeforcesStats, challenges, users as usersTable } from "@/lib/db/schema";
 import { ensureUser } from "@/lib/ensureUser";
 import { resolveEndedChallenges } from "@/lib/challenges/resolve";
 import { getBuilderRank, getChallengeRecord } from "@/lib/queries/leaderboard";
@@ -42,6 +42,31 @@ export default async function DashboardPage() {
 
   const currentRank = await getBuilderRank(user.id, gh?.monthly_commits ?? 0);
   const needsLinking = !user.leetcode_username || !user.codeforces_handle;
+  const challengeUserIds = Array.from(new Set(
+    [...pendingChallenges, ...activeChallenges].flatMap((c) => [c.challenger_id, c.opponent_id]),
+  ));
+  const challengeUsers = challengeUserIds.length > 0
+    ? await db
+      .select({
+        id: usersTable.id,
+        username: usersTable.username,
+        full_name: usersTable.full_name,
+        avatar_url: usersTable.avatar_url,
+      })
+      .from(usersTable)
+      .where(sql`${usersTable.id} = ANY(${sql.raw(`ARRAY[${challengeUserIds.map((id) => `'${id}'`).join(",")}]::uuid[]`)})`)
+    : [];
+  const challengeUserMap = new Map(challengeUsers.map((challengeUser) => [challengeUser.id, challengeUser]));
+  const pendingChallengeItems = pendingChallenges.map((challenge) => ({
+    ...challenge,
+    challenger: challengeUserMap.get(challenge.challenger_id) ?? null,
+    opponent: challengeUserMap.get(challenge.opponent_id) ?? null,
+  }));
+  const activeChallengeItems = activeChallenges.map((challenge) => ({
+    ...challenge,
+    challenger: challengeUserMap.get(challenge.challenger_id) ?? null,
+    opponent: challengeUserMap.get(challenge.opponent_id) ?? null,
+  }));
 
   return (
     <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8 space-y-8">
@@ -104,7 +129,7 @@ export default async function DashboardPage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <PendingChallenges challenges={pendingChallenges} currentUserId={user.id} />
+            <PendingChallenges challenges={pendingChallengeItems} />
           </CardContent>
         </Card>
 
@@ -116,7 +141,7 @@ export default async function DashboardPage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <ActiveChallenges challenges={activeChallenges} currentUserId={user.id} />
+            <ActiveChallenges challenges={activeChallengeItems} currentUserId={user.id} />
           </CardContent>
         </Card>
       </div>

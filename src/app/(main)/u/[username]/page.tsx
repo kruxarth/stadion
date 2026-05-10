@@ -19,6 +19,7 @@ import { eq, and, or, desc, sql } from "drizzle-orm";
 import type { ContributionDay } from "@/lib/github";
 import { getBuilderRank, getChallengeRecord } from "@/lib/queries/leaderboard";
 import { resolveEndedChallenges } from "@/lib/challenges/resolve";
+import { summarizeBadgeAwards } from "@/lib/badgeDisplay";
 
 const BADGE_EMOJI: Record<string, string> = {
   "commit-king": "👑", "duelist": "⚔️", "arena-king": "⚔️",
@@ -71,6 +72,7 @@ export default async function ProfilePage({ params }: { params: Promise<{ userna
 
   const contributionData = (gh?.contribution_data ?? []) as ContributionDay[];
   const totalProblems = (lc?.easy_count ?? 0) + (lc?.medium_count ?? 0) + (lc?.hard_count ?? 0) || 1;
+  const badgeSummaries = summarizeBadgeAwards(earnedBadges);
 
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8 space-y-8">
@@ -108,26 +110,33 @@ export default async function ProfilePage({ params }: { params: Promise<{ userna
       </div>
 
       {/* Badges shelf */}
-      {earnedBadges.length > 0 && (
+      {badgeSummaries.length > 0 && (
         <Card className="border-2 border-[rgba(99,228,224,0.2)]">
           <CardHeader className="pb-3">
             <CardTitle className="font-mono font-bold text-sm uppercase tracking-wider">BADGES</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="flex flex-wrap gap-3">
-              {earnedBadges.map((b) => (
-                <Tooltip key={`${b.slug}-${b.award_key}`}>
+              {badgeSummaries.map((b) => (
+                <Tooltip key={b.slug}>
                   <TooltipTrigger>
-                    <div className="flex items-center gap-2 brutal-border bg-[#1e3040] px-3 py-2 cursor-default">
+                    <div className={`flex items-center gap-2 brutal-border px-3 py-2 cursor-default ${b.isCurrent ? "bg-[#293a4e] border-[#63e4e0]" : "bg-[#1e3040]"}`}>
                       <span className="text-xl">{b.icon_url ? <img src={b.icon_url} className="h-5 w-5" alt={b.name} /> : (BADGE_EMOJI[b.slug] ?? "🏅")}</span>
-                      <span className="font-mono text-xs font-bold uppercase tracking-wider text-white">{b.name}</span>
+                      <span className="font-mono text-xs font-bold uppercase tracking-wider text-white">
+                        {b.name}{b.count > 1 ? ` x${b.count}` : ""}
+                      </span>
+                      {b.isCurrent && (
+                        <span className="font-mono text-[9px] font-bold uppercase tracking-wider text-[#63e4e0]">
+                          Current
+                        </span>
+                      )}
                     </div>
                   </TooltipTrigger>
                   <TooltipContent>
                     <p className="font-mono font-bold text-xs uppercase">{b.name}</p>
                     <p className="font-mono text-[10px] text-white/50">{b.description}</p>
                     <p className="font-mono text-[10px] text-white/30 mt-1">
-                      Awarded {new Date(b.awarded_at).toLocaleDateString()}
+                      {b.awardLabels.join(", ")}
                     </p>
                   </TooltipContent>
                 </Tooltip>

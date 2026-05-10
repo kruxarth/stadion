@@ -131,8 +131,20 @@ export function LeaderboardTable({ users, total, page, pageSize = 25, category }
                               BADGE_EMOJI[b.slug] ?? "🏅"
                             )}
                           </span>
+                          {b.count > 1 && (
+                            <span className="text-[10px] font-mono text-muted-foreground">x{b.count}</span>
+                          )}
                         </TooltipTrigger>
-                        <TooltipContent>{b.name}</TooltipContent>
+                        <TooltipContent>
+                          <div className="space-y-0.5">
+                            <p>{b.name}{b.count > 1 ? ` x${b.count}` : ""}</p>
+                            {b.awardLabels.length > 0 && (
+                              <p className="text-xs text-muted-foreground">
+                                {b.awardLabels.join(", ")}
+                              </p>
+                            )}
+                          </div>
+                        </TooltipContent>
                       </Tooltip>
                     ))}
                     {user.badges.length > 3 && (

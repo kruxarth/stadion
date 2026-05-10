@@ -3,13 +3,10 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Progress } from "@/components/ui/progress";
-import { Separator } from "@/components/ui/separator";
-import { Badge } from "@/components/ui/badge";
-import { Star, GitBranch } from "lucide-react";
+import { ExternalLink, Code2, Terminal } from "lucide-react";
 import Link from "next/link";
 import { ContributionHeatmap } from "@/components/profile/ContributionHeatmap";
 import { PlatformHeatmap } from "@/components/profile/PlatformHeatmap";
-import { fetchTopRepos } from "@/lib/github";
 import { db } from "@/lib/db";
 import {
   users, githubStats, leetcodeStats, codeforcesStats,
@@ -25,6 +22,58 @@ const BADGE_EMOJI: Record<string, string> = {
   "commit-king": "👑", "duelist": "⚔️", "arena-king": "⚔️",
   "cf-king": "🔵", "lc-king": "🟡", "alumni-legend": "🎓",
 };
+
+function leetcodeProfileUrl(username: string) {
+  return `https://leetcode.com/u/${username}/`;
+}
+
+function codeforcesProfileUrl(handle: string) {
+  return `https://codeforces.com/profile/${handle}`;
+}
+
+function githubProfileUrl(username: string) {
+  return `https://github.com/${username}`;
+}
+
+function ExternalProfileLink({
+  href,
+  label,
+}: {
+  href: string;
+  label: string;
+}) {
+  return (
+    <Link
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="brutal-border brutal-hover inline-flex items-center gap-1.5 bg-transparent px-3 py-1.5 font-mono text-[10px] font-bold uppercase tracking-wider text-[#63e4e0]"
+    >
+      {label}
+      <ExternalLink className="h-3 w-3" />
+    </Link>
+  );
+}
+
+function SectionTitleLink({
+  href,
+  label,
+}: {
+  href: string;
+  label: string;
+}) {
+  return (
+    <Link
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="inline-flex items-center gap-1 text-[#63e4e0] hover:text-white transition-colors"
+      aria-label={`Open ${label} profile`}
+    >
+      <ExternalLink className="h-3.5 w-3.5" />
+    </Link>
+  );
+}
 
 export async function generateMetadata({ params }: { params: Promise<{ username: string }> }) {
   const { username } = await params;
@@ -58,7 +107,6 @@ export default async function ProfilePage({ params }: { params: Promise<{ userna
   ]);
 
   const currentRank = await getBuilderRank(user.id, gh?.monthly_commits ?? 0);
-  const topRepos = await fetchTopRepos(user.github_username);
 
   // Fetch opponent usernames for challenge history
   const opponentIds = recentChallenges.map((c) =>
@@ -91,6 +139,15 @@ export default async function ProfilePage({ params }: { params: Promise<{ userna
             {user.department ?? "---"} //{" "}
             {user.is_alumni ? "ALUMNI" : user.college_year ? `YEAR ${user.college_year}` : "---"}
           </p>
+          <div className="mt-3 flex flex-wrap gap-2">
+            <ExternalProfileLink href={githubProfileUrl(user.github_username)} label="GitHub" />
+            {user.leetcode_username && (
+              <ExternalProfileLink href={leetcodeProfileUrl(user.leetcode_username)} label="LeetCode" />
+            )}
+            {user.codeforces_handle && (
+              <ExternalProfileLink href={codeforcesProfileUrl(user.codeforces_handle)} label="Codeforces" />
+            )}
+          </div>
         </div>
       </div>
 
@@ -150,7 +207,10 @@ export default async function ProfilePage({ params }: { params: Promise<{ userna
       {contributionData.length > 0 && (
         <Card className="border-2 border-[rgba(99,228,224,0.2)]">
           <CardHeader className="pb-3">
-            <CardTitle className="font-mono font-bold text-sm uppercase tracking-wider">GITHUB CONTRIBUTIONS</CardTitle>
+            <CardTitle className="flex items-center gap-2 font-mono font-bold text-sm uppercase tracking-wider">
+              GITHUB CONTRIBUTIONS
+              <SectionTitleLink href={githubProfileUrl(user.github_username)} label="GitHub" />
+            </CardTitle>
           </CardHeader>
           <CardContent className="overflow-x-auto">
             <ContributionHeatmap data={contributionData} />
@@ -162,7 +222,10 @@ export default async function ProfilePage({ params }: { params: Promise<{ userna
       {user.leetcode_username && (
         <Card className="border-2 border-[rgba(99,228,224,0.2)]">
           <CardHeader className="pb-3">
-            <CardTitle className="font-mono font-bold text-sm uppercase tracking-wider">LEETCODE ACTIVITY</CardTitle>
+            <CardTitle className="flex items-center gap-2 font-mono font-bold text-sm uppercase tracking-wider">
+              LEETCODE ACTIVITY
+              <SectionTitleLink href={leetcodeProfileUrl(user.leetcode_username)} label="LeetCode" />
+            </CardTitle>
           </CardHeader>
           <CardContent className="overflow-x-auto">
             <PlatformHeatmap
@@ -178,7 +241,10 @@ export default async function ProfilePage({ params }: { params: Promise<{ userna
       {user.codeforces_handle && (
         <Card className="border-2 border-[rgba(99,228,224,0.2)]">
           <CardHeader className="pb-3">
-            <CardTitle className="font-mono font-bold text-sm uppercase tracking-wider">CODEFORCES ACTIVITY</CardTitle>
+            <CardTitle className="flex items-center gap-2 font-mono font-bold text-sm uppercase tracking-wider">
+              CODEFORCES ACTIVITY
+              <SectionTitleLink href={codeforcesProfileUrl(user.codeforces_handle)} label="Codeforces" />
+            </CardTitle>
           </CardHeader>
           <CardContent className="overflow-x-auto">
             <PlatformHeatmap
@@ -192,38 +258,17 @@ export default async function ProfilePage({ params }: { params: Promise<{ userna
 
       {/* Bottom grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-        {/* Top repos */}
-        {topRepos.length > 0 && (
-          <Card className="border-2 border-[rgba(99,228,224,0.2)]">
-            <CardHeader className="pb-3">
-              <CardTitle className="font-mono font-bold text-sm uppercase tracking-wider">TOP REPOS</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {topRepos.map((repo) => (
-                <Link key={repo.name} href={repo.url} target="_blank" rel="noopener noreferrer"
-                  className="flex items-start justify-between gap-2 brutal-border brutal-hover p-3 bg-[#1e3040]">
-                  <div className="min-w-0">
-                    <p className="font-mono font-bold text-xs uppercase flex items-center gap-1.5 text-white">
-                      <GitBranch className="h-3.5 w-3.5 shrink-0 text-[#63e4e0]" />
-                      {repo.name}
-                    </p>
-                    {repo.description && <p className="font-mono text-[10px] text-white/40 mt-0.5 truncate">{repo.description}</p>}
-                    {repo.language && <Badge variant="outline" className="font-mono text-[10px] mt-1.5 border-[#63e4e0]/30 text-[#63e4e0]">{repo.language}</Badge>}
-                  </div>
-                  <div className="flex items-center gap-1 font-mono text-[10px] text-white/40 shrink-0">
-                    <Star className="h-3 w-3" />{repo.stars}
-                  </div>
-                </Link>
-              ))}
-            </CardContent>
-          </Card>
-        )}
-
         {/* LeetCode card */}
         {lc && (
           <Card className="border-2 border-[rgba(99,228,224,0.2)]">
             <CardHeader className="pb-3">
-              <CardTitle className="font-mono font-bold text-sm uppercase tracking-wider">LEETCODE</CardTitle>
+              <CardTitle className="flex items-center gap-2 font-mono font-bold text-sm uppercase tracking-wider">
+                <Code2 className="h-4 w-4 text-[#63e4e0]" />
+                LEETCODE
+                {user.leetcode_username && (
+                  <SectionTitleLink href={leetcodeProfileUrl(user.leetcode_username)} label="LeetCode" />
+                )}
+              </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex justify-between font-mono text-xs uppercase">
@@ -255,7 +300,13 @@ export default async function ProfilePage({ params }: { params: Promise<{ userna
         {cf && (
           <Card className="border-2 border-[rgba(99,228,224,0.2)]">
             <CardHeader className="pb-3">
-              <CardTitle className="font-mono font-bold text-sm uppercase tracking-wider">CODEFORCES</CardTitle>
+              <CardTitle className="flex items-center gap-2 font-mono font-bold text-sm uppercase tracking-wider">
+                <Terminal className="h-4 w-4 text-[#63e4e0]" />
+                CODEFORCES
+                {user.codeforces_handle && (
+                  <SectionTitleLink href={codeforcesProfileUrl(user.codeforces_handle)} label="Codeforces" />
+                )}
+              </CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
               {[

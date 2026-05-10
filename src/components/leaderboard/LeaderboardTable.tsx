@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter, usePathname, useSearchParams } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Button } from "@/components/ui/button";
@@ -76,12 +76,14 @@ export function LeaderboardTable({ users, total, page, pageSize = 25, category }
             {users.map((user) => (
               <tr
                 key={user.id}
-                className="hover:bg-muted/30 transition-colors cursor-pointer"
-                onClick={() => router.push(`/u/${user.username}`)}
+                className="hover:bg-muted/30 transition-colors"
               >
                 <td className="px-4 py-3 font-mono text-muted-foreground">{user.rank}</td>
                 <td className="px-4 py-3">
-                  <div className="flex items-center gap-2.5">
+                  <Link
+                    href={`/u/${user.username}`}
+                    className="flex items-center gap-2.5 rounded-md transition-colors hover:text-[#63e4e0] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#63e4e0]"
+                  >
                     <Avatar className="h-7 w-7 shrink-0">
                       <AvatarImage src={user.avatar_url ?? undefined} />
                       <AvatarFallback className="text-xs">{user.full_name[0]}</AvatarFallback>
@@ -93,7 +95,7 @@ export function LeaderboardTable({ users, total, page, pageSize = 25, category }
                       </p>
                       <p className="text-xs text-muted-foreground">@{user.username}</p>
                     </div>
-                  </div>
+                  </Link>
                 </td>
                 <td className="px-4 py-3 hidden md:table-cell text-muted-foreground text-xs max-w-[120px] truncate">
                   {user.department ?? "—"}

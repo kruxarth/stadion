@@ -9,7 +9,7 @@ interface Props {
 
 function timeUntil(date: Date | string): string {
   const ms = new Date(date).getTime() - Date.now();
-  if (ms <= 0) return "Ended";
+  if (ms <= 0) return "Waiting for official results";
   const h = Math.floor(ms / 3_600_000);
   const m = Math.floor((ms % 3_600_000) / 60_000);
   return h > 0 ? `${h}h ${m}m remaining` : `${m}m remaining`;

@@ -16,7 +16,18 @@ type PendingChallenge = {
   platform: string;
   contest_id: string;
   contest_name: string;
+  contest_end: Date;
 };
+
+const HOUR_MS = 60 * 60 * 1000;
+const DAY_MS = 24 * HOUR_MS;
+
+const PLATFORM_RESULT_GRACE_MS: Record<string, number> = {
+  codeforces: 24 * HOUR_MS,
+  leetcode: 72 * HOUR_MS,
+};
+
+const FINAL_RESULT_CUTOFF_MS = 7 * DAY_MS;
 
 export async function resolveEndedChallenges(options: ResolveChallengeOptions = {}) {
   const now = new Date();
@@ -42,6 +53,7 @@ export async function resolveEndedChallenges(options: ResolveChallengeOptions = 
       platform: challenges.platform,
       contest_id: challenges.contest_id,
       contest_name: challenges.contest_name,
+      contest_end: challenges.contest_end,
     })
     .from(challenges)
     .where(and(...conditions));
@@ -67,6 +79,17 @@ export async function resolveEndedChallenges(options: ResolveChallengeOptions = 
 
 async function resolveChallenge(challenge: PendingChallenge, now: Date) {
   try {
+    const elapsedSinceEnd = now.getTime() - new Date(challenge.contest_end).getTime();
+    const graceMs = PLATFORM_RESULT_GRACE_MS[challenge.platform] ?? 24 * HOUR_MS;
+    const finalCutoffReached = elapsedSinceEnd >= FINAL_RESULT_CUTOFF_MS;
+
+    if (elapsedSinceEnd < graceMs) {
+      console.log(
+        `[resolve-challenges] ${challenge.id}: waiting for ${challenge.platform} official results`,
+      );
+      return false;
+    }
+
     const [challenger, opponent] = await Promise.all([
       db.query.users.findFirst({
         where: eq(users.id, challenge.challenger_id),
@@ -130,6 +153,14 @@ async function resolveChallenge(challenge: PendingChallenge, now: Date) {
     if (rankDataUnavailable) {
       console.warn(
         `[resolve-challenges] Rank data unavailable for challenge ${challenge.id} - retrying later`,
+      );
+      return false;
+    }
+
+    const rankMissing = challengerRank === null || opponentRank === null;
+    if (rankMissing && !finalCutoffReached) {
+      console.warn(
+        `[resolve-challenges] ${challenge.id}: incomplete ranks for ${challenge.platform} - retrying until final cutoff`,
       );
       return false;
     }

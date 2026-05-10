@@ -65,10 +65,10 @@ How it works:
 3. Challenge another Stadion user.
 4. The opponent accepts or declines before the contest starts.
 5. Both users participate in the contest on the original platform.
-6. After the contest ends, Stadion checks both contest ranks.
+6. After the contest ends, Stadion waits for official platform results to settle, then checks both contest ranks.
 7. The user with the better rank wins the challenge.
 
-If both users have the same rank, the challenge is recorded as a draw. If only one user has a valid rank, that user wins. If contest rank data is temporarily unavailable, Stadion retries later.
+If both users have the same rank, the challenge is recorded as a draw. If only one user has a valid rank after the result cutoff, that user wins. If contest rank data is temporarily unavailable or incomplete, Stadion retries later.
 
 Challenges must be created and accepted before the contest starts. Both users must have the relevant platform profile linked.
 

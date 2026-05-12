@@ -62,114 +62,116 @@ export function LeaderboardTable({ users, total, page, pageSize = 25, category }
 
   return (
     <div>
-      <div className="rounded-xl border border-border overflow-hidden">
-        <table className="w-full text-sm">
-          <thead className="bg-muted/50">
-            <tr className="text-left text-xs text-muted-foreground uppercase tracking-wide">
-              <th className="px-4 py-3 w-12">#</th>
-              <th className="px-4 py-3">User</th>
-              <th className="px-4 py-3 hidden md:table-cell">Dept</th>
-              <th className="px-4 py-3 hidden sm:table-cell">Year</th>
-              <th className="px-4 py-3 text-right">Score</th>
-              <th className="px-4 py-3 text-right hidden sm:table-cell">Contrib</th>
-              <th className="px-4 py-3 text-right hidden md:table-cell">LC</th>
-              <th className="px-4 py-3 text-right hidden md:table-cell">CF</th>
-              <th className="px-4 py-3 text-right hidden lg:table-cell">Arena</th>
-              <th className="px-4 py-3 hidden lg:table-cell">Badges</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-border">
-            {users.map((user) => (
-              <tr
-                key={user.id}
-                className="hover:bg-muted/30 transition-colors"
-              >
-                <td className="px-4 py-3 font-mono text-muted-foreground">{user.rank}</td>
-                <td className="px-4 py-3">
-                  <Link
-                    href={`/u/${user.username}`}
-                    className="flex items-center gap-2.5 rounded-md transition-colors hover:text-[#63e4e0] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#63e4e0]"
-                  >
-                    <Avatar className="h-7 w-7 shrink-0">
-                      <AvatarImage src={user.avatar_url ?? undefined} />
-                      <AvatarFallback className="text-xs">{user.full_name[0]}</AvatarFallback>
-                    </Avatar>
-                    <div className="min-w-0">
-                      <p className="font-medium truncate max-w-[140px]">
-                        {user.full_name}
-                        {user.is_alumni && " 🎓"}
-                      </p>
-                      <p className="text-xs text-muted-foreground">@{user.username}</p>
-                    </div>
-                  </Link>
-                </td>
-                <td className="px-4 py-3 hidden md:table-cell text-muted-foreground text-xs max-w-[120px] truncate">
-                  {user.department ?? "—"}
-                </td>
-                <td className="px-4 py-3 hidden sm:table-cell text-muted-foreground text-xs">
-                  {user.is_alumni
-                    ? "Alumni"
-                    : user.college_year
-                      ? `${PROGRAM_LABELS[user.program] ?? user.program} Y${user.college_year}`
-                      : PROGRAM_LABELS[user.program] ?? "—"}
-                </td>
-                <td className="px-4 py-3 text-right font-semibold" style={{ color: "#63e4e0" }}>
-                  <div>{user.score.toLocaleString()}</div>
-                  <div className="text-[10px] uppercase tracking-wider text-muted-foreground">
-                    {secondaryValue(user, category)}
-                  </div>
-                </td>
-                <td className="px-4 py-3 text-right hidden sm:table-cell text-muted-foreground">
-                  {user.monthly_commits} mo / {user.weekly_commits} wk
-                </td>
-                <td className="px-4 py-3 text-right hidden md:table-cell text-muted-foreground">
-                  {user.leetcode_rating ?? "—"}
-                </td>
-                <td className="px-4 py-3 text-right hidden md:table-cell text-muted-foreground">
-                  {user.codeforces_rating ?? "—"}
-                </td>
-                <td className="px-4 py-3 text-right hidden lg:table-cell text-muted-foreground">
-                  {secondaryValue(user, "arena")}
-                </td>
-                <td className="px-4 py-3 hidden lg:table-cell">
-                  <div className="flex items-center gap-0.5">
-                    {user.badges.slice(0, 3).map((b) => (
-                      <Tooltip key={b.slug}>
-                        <TooltipTrigger>
-                          <span className="text-base cursor-default">
-                            {b.icon_url ? (
-                              <img src={b.icon_url} alt={b.name} className="h-5 w-5" />
-                            ) : (
-                              BADGE_EMOJI[b.slug] ?? "🏅"
-                            )}
-                          </span>
-                          {b.count > 1 && (
-                            <span className="text-[10px] font-mono text-muted-foreground">x{b.count}</span>
-                          )}
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          <div className="space-y-0.5">
-                            <p>{b.name}{b.count > 1 ? ` x${b.count}` : ""}</p>
-                            {b.awardLabels.length > 0 && (
-                              <p className="text-xs text-muted-foreground">
-                                {b.awardLabels.join(", ")}
-                              </p>
-                            )}
-                          </div>
-                        </TooltipContent>
-                      </Tooltip>
-                    ))}
-                    {user.badges.length > 3 && (
-                      <span className="text-xs text-muted-foreground ml-1">
-                        +{user.badges.length - 3}
-                      </span>
-                    )}
-                  </div>
-                </td>
+      <div className="max-w-full overflow-hidden rounded-xl border border-border">
+        <div className="overflow-x-auto">
+          <table className="min-w-[520px] w-full text-sm sm:min-w-[760px] lg:min-w-full">
+            <thead className="bg-muted/50">
+              <tr className="text-left text-xs text-muted-foreground uppercase tracking-wide">
+                <th className="px-4 py-3 w-12">#</th>
+                <th className="px-4 py-3">User</th>
+                <th className="px-4 py-3 hidden md:table-cell">Dept</th>
+                <th className="px-4 py-3 hidden sm:table-cell">Year</th>
+                <th className="px-4 py-3 text-right min-w-40">Score</th>
+                <th className="px-4 py-3 text-right hidden sm:table-cell">Contrib</th>
+                <th className="px-4 py-3 text-right hidden md:table-cell">LC</th>
+                <th className="px-4 py-3 text-right hidden md:table-cell">CF</th>
+                <th className="px-4 py-3 text-right hidden lg:table-cell">Arena</th>
+                <th className="px-4 py-3 hidden lg:table-cell">Badges</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody className="divide-y divide-border">
+              {users.map((user) => (
+                <tr
+                  key={user.id}
+                  className="hover:bg-muted/30 transition-colors"
+                >
+                  <td className="px-4 py-3 font-mono text-muted-foreground">{user.rank}</td>
+                  <td className="px-4 py-3">
+                    <Link
+                      href={`/u/${user.username}`}
+                      className="flex items-center gap-2.5 rounded-md transition-colors hover:text-[#63e4e0] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#63e4e0]"
+                    >
+                      <Avatar className="h-7 w-7 shrink-0">
+                        <AvatarImage src={user.avatar_url ?? undefined} />
+                        <AvatarFallback className="text-xs">{user.full_name[0]}</AvatarFallback>
+                      </Avatar>
+                      <div className="min-w-0">
+                        <p className="font-medium truncate max-w-[140px]">
+                          {user.full_name}
+                          {user.is_alumni && " 🎓"}
+                        </p>
+                        <p className="text-xs text-muted-foreground">@{user.username}</p>
+                      </div>
+                    </Link>
+                  </td>
+                  <td className="px-4 py-3 hidden md:table-cell text-muted-foreground text-xs max-w-[120px] truncate">
+                    {user.department ?? "—"}
+                  </td>
+                  <td className="px-4 py-3 hidden sm:table-cell text-muted-foreground text-xs">
+                    {user.is_alumni
+                      ? "Alumni"
+                      : user.college_year
+                        ? `${PROGRAM_LABELS[user.program] ?? user.program} Y${user.college_year}`
+                        : PROGRAM_LABELS[user.program] ?? "—"}
+                  </td>
+                  <td className="px-4 py-3 text-right font-semibold" style={{ color: "#63e4e0" }}>
+                    <div>{user.score.toLocaleString()}</div>
+                    <div className="whitespace-nowrap text-[10px] uppercase tracking-wider text-muted-foreground">
+                      {secondaryValue(user, category)}
+                    </div>
+                  </td>
+                  <td className="px-4 py-3 text-right hidden sm:table-cell text-muted-foreground">
+                    {user.monthly_commits} mo / {user.weekly_commits} wk
+                  </td>
+                  <td className="px-4 py-3 text-right hidden md:table-cell text-muted-foreground">
+                    {user.leetcode_rating ?? "—"}
+                  </td>
+                  <td className="px-4 py-3 text-right hidden md:table-cell text-muted-foreground">
+                    {user.codeforces_rating ?? "—"}
+                  </td>
+                  <td className="px-4 py-3 text-right hidden lg:table-cell text-muted-foreground">
+                    {secondaryValue(user, "arena")}
+                  </td>
+                  <td className="px-4 py-3 hidden lg:table-cell">
+                    <div className="flex items-center gap-0.5">
+                      {user.badges.slice(0, 3).map((b) => (
+                        <Tooltip key={b.slug}>
+                          <TooltipTrigger>
+                            <span className="text-base cursor-default">
+                              {b.icon_url ? (
+                                <img src={b.icon_url} alt={b.name} className="h-5 w-5" />
+                              ) : (
+                                BADGE_EMOJI[b.slug] ?? "🏅"
+                              )}
+                            </span>
+                            {b.count > 1 && (
+                              <span className="text-[10px] font-mono text-muted-foreground">x{b.count}</span>
+                            )}
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <div className="space-y-0.5">
+                              <p>{b.name}{b.count > 1 ? ` x${b.count}` : ""}</p>
+                              {b.awardLabels.length > 0 && (
+                                <p className="text-xs text-muted-foreground">
+                                  {b.awardLabels.join(", ")}
+                                </p>
+                              )}
+                            </div>
+                          </TooltipContent>
+                        </Tooltip>
+                      ))}
+                      {user.badges.length > 3 && (
+                        <span className="text-xs text-muted-foreground ml-1">
+                          +{user.badges.length - 3}
+                        </span>
+                      )}
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       {/* Pagination */}

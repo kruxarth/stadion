@@ -18,6 +18,8 @@ import { getBuilderRank, getChallengeRecord } from "@/lib/queries/leaderboard";
 import { resolveEndedChallenges } from "@/lib/challenges/resolve";
 import { summarizeBadgeAwards } from "@/lib/badgeDisplay";
 
+export const dynamic = "force-dynamic";
+
 const BADGE_EMOJI: Record<string, string> = {
   "commit-king": "👑", "duelist": "⚔️", "arena-king": "⚔️",
   "cf-king": "🔵", "lc-king": "🟡", "alumni-legend": "🎓",

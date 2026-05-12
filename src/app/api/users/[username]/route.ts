@@ -3,6 +3,8 @@ import { users, githubStats, leetcodeStats, codeforcesStats, userBadges, badges,
 import { eq, and, or, desc, sql } from "drizzle-orm";
 import { getBuilderRank, getChallengeRecord } from "@/lib/queries/leaderboard";
 
+export const dynamic = "force-dynamic";
+
 export async function GET(
   _request: Request,
   { params }: { params: Promise<{ username: string }> },

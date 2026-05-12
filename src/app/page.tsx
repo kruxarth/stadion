@@ -7,6 +7,8 @@ import { Features } from "@/components/landing/Features";
 import { Footer } from "@/components/landing/Footer";
 import { getTopLeaderboard, getLandingStats } from "@/lib/queries/leaderboard";
 
+export const dynamic = "force-dynamic";
+
 export default async function LandingPage() {
   const [topUsers, stats] = await Promise.all([
     getTopLeaderboard(5).catch(() => []),

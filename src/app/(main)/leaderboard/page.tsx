@@ -5,6 +5,8 @@ import { getLeaderboard, type LeaderboardCategory } from "@/lib/queries/leaderbo
 import { LeaderboardControls } from "./_components/LeaderboardControls";
 import type { LeaderboardProgramFilter, LeaderboardYearFilter } from "@/lib/queries/leaderboard";
 
+export const dynamic = "force-dynamic";
+
 export const metadata = { title: "Leaderboard — Stadion" };
 
 type SearchParams = Promise<{ tab?: string; year?: string; program?: string; page?: string }>;

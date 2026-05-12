@@ -1,5 +1,7 @@
 import { getTopLeaderboard } from "@/lib/queries/leaderboard";
 
+export const dynamic = "force-dynamic";
+
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const limit = Math.min(Number(searchParams.get("limit") ?? "5"), 100);

@@ -9,8 +9,8 @@ export function Hero() {
   const { isSignedIn } = useAuth();
 
   return (
-    <section className="relative min-h-screen flex items-center justify-center pt-14 px-4 text-center overflow-hidden bg-black">
-      <div className="relative z-10 w-full max-w-5xl mx-auto">
+    <section className="relative flex min-h-screen items-center justify-center overflow-x-clip overflow-y-hidden bg-black px-4 pt-14 text-center">
+      <div className="relative z-10 mx-auto w-full max-w-5xl overflow-x-clip">
         {/* Marquee ticker */}
         <motion.div
           initial={{ opacity: 0 }}
@@ -33,7 +33,7 @@ export function Hero() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.1 }}
         >
-          <h1 className="text-[3.45rem] min-[390px]:text-6xl sm:text-7xl md:text-8xl lg:text-9xl font-black uppercase tracking-[-0.04em] sm:tracking-tighter leading-[0.88] sm:leading-[0.85] mb-4">
+          <h1 className="mb-4 text-[2.95rem] min-[390px]:text-[3.6rem] sm:text-7xl md:text-8xl lg:text-9xl font-black uppercase leading-[0.88] sm:leading-[0.85]">
             <span className="glitch-text block" data-text="OUTRANK">OUTRANK</span>
             <span className="block text-[#63e4e0] glitch-text" data-text="EVERY">EVERY</span>
             <span className="glitch-text block" data-text="ONE">ONE</span>

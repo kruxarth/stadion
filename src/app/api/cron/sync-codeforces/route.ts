@@ -3,6 +3,9 @@ import { users, codeforcesStats } from "@/lib/db/schema";
 import { isNotNull } from "drizzle-orm";
 import { fetchCodeforcesStats } from "@/lib/codeforces";
 import { verifyCronAuth } from "@/lib/cronAuth";
+import { pMap } from "@/lib/concurrency";
+
+const CONCURRENCY = 10;
 
 export async function GET(request: Request) {
   if (!verifyCronAuth(request)) {
@@ -14,15 +17,15 @@ export async function GET(request: Request) {
     .from(users)
     .where(isNotNull(users.codeforces_handle));
 
-  console.log(`[sync-codeforces] Processing ${allUsers.length} users`);
+  console.log(`[sync-codeforces] Processing ${allUsers.length} users (concurrency=${CONCURRENCY})`);
 
   let processed = 0;
 
-  for (const user of allUsers) {
+  await pMap(allUsers, async (user) => {
     const stats = await fetchCodeforcesStats(user.codeforces_handle!);
     if (!stats) {
       console.warn(`[sync-codeforces] No stats for ${user.codeforces_handle}`);
-      continue;
+      return;
     }
 
     await db
@@ -46,11 +49,8 @@ export async function GET(request: Request) {
         },
       });
 
-    console.log(
-      `[sync-codeforces] ${user.codeforces_handle}: rating=${stats.rating}, rank=${stats.rank}`,
-    );
     processed++;
-  }
+  }, CONCURRENCY);
 
   console.log(`[sync-codeforces] Done. Processed ${processed}/${allUsers.length}`);
   return Response.json({ success: true, processed });

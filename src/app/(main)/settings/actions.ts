@@ -49,30 +49,39 @@ export async function updateSettings(data: SettingsData): Promise<{ success: boo
     updated_at: new Date(),
   }).where(eq(users.id, user.id));
 
-  // Immediate sync when LC/CF username changed
-  if (lcUsernameChanged && data.leetcode_username.trim()) {
-    const stats = await fetchLeetCodeStats(data.leetcode_username.trim());
-    if (stats) {
-      await db.insert(leetcodeStats).values({ user_id: user.id, ...stats, updated_at: new Date() })
-        .onConflictDoUpdate({ target: leetcodeStats.user_id, set: { ...stats, updated_at: new Date() } });
-    } else {
-      await db.delete(leetcodeStats).where(eq(leetcodeStats.user_id, user.id));
-    }
-  } else if (lcUsernameChanged) {
-    await db.delete(leetcodeStats).where(eq(leetcodeStats.user_id, user.id));
-  }
-
-  if (cfHandleChanged && data.codeforces_handle.trim()) {
-    const stats = await fetchCodeforcesStats(data.codeforces_handle.trim());
-    if (stats) {
-      await db.insert(codeforcesStats).values({ user_id: user.id, ...stats, updated_at: new Date() })
-        .onConflictDoUpdate({ target: codeforcesStats.user_id, set: { ...stats, updated_at: new Date() } });
-    } else {
-      await db.delete(codeforcesStats).where(eq(codeforcesStats.user_id, user.id));
-    }
-  } else if (cfHandleChanged) {
-    await db.delete(codeforcesStats).where(eq(codeforcesStats.user_id, user.id));
-  }
+  // Immediate sync when LC/CF username changed (parallel)
+  await Promise.all([
+    lcUsernameChanged
+      ? (async () => {
+          if (!data.leetcode_username.trim()) {
+            await db.delete(leetcodeStats).where(eq(leetcodeStats.user_id, user.id));
+            return;
+          }
+          const stats = await fetchLeetCodeStats(data.leetcode_username.trim());
+          if (stats) {
+            await db.insert(leetcodeStats).values({ user_id: user.id, ...stats, updated_at: new Date() })
+              .onConflictDoUpdate({ target: leetcodeStats.user_id, set: { ...stats, updated_at: new Date() } });
+          } else {
+            await db.delete(leetcodeStats).where(eq(leetcodeStats.user_id, user.id));
+          }
+        })()
+      : Promise.resolve(),
+    cfHandleChanged
+      ? (async () => {
+          if (!data.codeforces_handle.trim()) {
+            await db.delete(codeforcesStats).where(eq(codeforcesStats.user_id, user.id));
+            return;
+          }
+          const stats = await fetchCodeforcesStats(data.codeforces_handle.trim());
+          if (stats) {
+            await db.insert(codeforcesStats).values({ user_id: user.id, ...stats, updated_at: new Date() })
+              .onConflictDoUpdate({ target: codeforcesStats.user_id, set: { ...stats, updated_at: new Date() } });
+          } else {
+            await db.delete(codeforcesStats).where(eq(codeforcesStats.user_id, user.id));
+          }
+        })()
+      : Promise.resolve(),
+  ]);
 
   return { success: true };
 }

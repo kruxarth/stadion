@@ -3,6 +3,7 @@ import { fetchCodeforcesContestRankResults } from "@/lib/codeforces";
 import { db } from "@/lib/db";
 import { challenges, users } from "@/lib/db/schema";
 import { fetchLeetCodeContestRankResult } from "@/lib/leetcode";
+import { pMap } from "@/lib/concurrency";
 
 type ResolveChallengeOptions = {
   userId?: string;
@@ -64,10 +65,10 @@ export async function resolveEndedChallenges(options: ResolveChallengeOptions = 
 
   let processed = 0;
 
-  for (const challenge of pending) {
+  await pMap(pending, async (challenge) => {
     const didResolve = await resolveChallenge(challenge, now);
     if (didResolve) processed++;
-  }
+  }, 5);
 
   console.log(`[resolve-challenges] Done. Resolved ${processed}/${pending.length}`);
 

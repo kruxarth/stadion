@@ -15,10 +15,9 @@ import {
 import { eq, and, or, desc, sql } from "drizzle-orm";
 import type { ContributionDay } from "@/lib/github";
 import { getBuilderRank, getChallengeRecord } from "@/lib/queries/leaderboard";
-import { resolveEndedChallenges } from "@/lib/challenges/resolve";
 import { summarizeBadgeAwards } from "@/lib/badgeDisplay";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 30; // Profile data changes infrequently
 
 const BADGE_EMOJI: Record<string, string> = {
   "commit-king": "👑", "duelist": "⚔️", "arena-king": "⚔️",
@@ -88,8 +87,6 @@ export default async function ProfilePage({ params }: { params: Promise<{ userna
   const user = await db.query.users.findFirst({ where: eq(users.username, username) });
   if (!user) notFound();
 
-  await resolveEndedChallenges({ userId: user.id, limit: 10 });
-
   const [gh, lc, cf, earnedBadges, recentChallenges, challengeRecord] = await Promise.all([
     db.query.githubStats.findFirst({ where: eq(githubStats.user_id, user.id) }),
     db.query.leetcodeStats.findFirst({ where: eq(leetcodeStats.user_id, user.id) }),
@@ -108,17 +105,19 @@ export default async function ProfilePage({ params }: { params: Promise<{ userna
     getChallengeRecord(user.id),
   ]);
 
-  const currentRank = await getBuilderRank(user.id, gh?.monthly_commits ?? 0);
-
   // Fetch opponent usernames for challenge history
   const opponentIds = recentChallenges.map((c) =>
     c.challenger_id === user.id ? c.opponent_id : c.challenger_id);
-  const opponentMap = new Map<string, string>();
-  if (opponentIds.length > 0) {
-    const opponents = await db.select({ id: users.id, username: users.username }).from(users)
-      .where(sql`${users.id} = ANY(${sql.raw(`ARRAY[${opponentIds.map((id) => `'${id}'`).join(",")}]::uuid[]`)})`);
-    for (const o of opponents) opponentMap.set(o.id, o.username);
-  }
+
+  const [currentRank, opponents] = await Promise.all([
+    getBuilderRank(user.id, gh?.monthly_commits ?? 0),
+    opponentIds.length > 0
+      ? db.select({ id: users.id, username: users.username }).from(users)
+        .where(sql`${users.id} = ANY(${sql.raw(`ARRAY[${opponentIds.map((id) => `'${id}'`).join(",")}]::uuid[]`)})`)
+      : Promise.resolve([]),
+  ]);
+
+  const opponentMap = new Map(opponents.map((o) => [o.id, o.username]));
 
   const contributionData = (gh?.contribution_data ?? []) as ContributionDay[];
   const totalProblems = (lc?.easy_count ?? 0) + (lc?.medium_count ?? 0) + (lc?.hard_count ?? 0) || 1;

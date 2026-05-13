@@ -4,12 +4,12 @@ import { eq, or, and, sql } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { githubStats, leetcodeStats, codeforcesStats, challenges, users as usersTable } from "@/lib/db/schema";
 import { ensureUser } from "@/lib/ensureUser";
-import { resolveEndedChallenges } from "@/lib/challenges/resolve";
 import { getBuilderRank, getChallengeRecord } from "@/lib/queries/leaderboard";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
 import { GitCommitHorizontal, Trophy, Code2, Swords, ExternalLink, AlertCircle } from "lucide-react";
+import { resolveEndedChallenges } from "@/lib/challenges/resolve";
 import { PendingChallenges } from "./_components/PendingChallenges";
 import { ActiveChallenges } from "./_components/ActiveChallenges";
 import { ContributionHeatmap } from "@/components/profile/ContributionHeatmap";
@@ -22,9 +22,8 @@ export default async function DashboardPage() {
   const user = await ensureUser();
   if (!user) redirect("/");
 
-  await resolveEndedChallenges({ userId: user.id, limit: 10 });
-
-  const [gh, lc, cf, pendingChallenges, activeChallenges, challengeRecord] = await Promise.all([
+  const [, gh, lc, cf, pendingChallenges, activeChallenges, challengeRecord] = await Promise.all([
+    resolveEndedChallenges({ userId: user.id, limit: 10 }),
     db.query.githubStats.findFirst({ where: eq(githubStats.user_id, user.id) }),
     db.query.leetcodeStats.findFirst({ where: eq(leetcodeStats.user_id, user.id) }),
     db.query.codeforcesStats.findFirst({ where: eq(codeforcesStats.user_id, user.id) }),
@@ -40,22 +39,25 @@ export default async function DashboardPage() {
     getChallengeRecord(user.id),
   ]);
 
-  const currentRank = await getBuilderRank(user.id, gh?.monthly_commits ?? 0);
+  const [currentRank, challengeUsers] = await Promise.all([
+    getBuilderRank(user.id, gh?.monthly_commits ?? 0),
+    (() => {
+      const challengeUserIds = Array.from(new Set(
+        [...pendingChallenges, ...activeChallenges].flatMap((c) => [c.challenger_id, c.opponent_id]),
+      ));
+      return challengeUserIds.length > 0
+        ? db.select({
+            id: usersTable.id,
+            username: usersTable.username,
+            full_name: usersTable.full_name,
+            avatar_url: usersTable.avatar_url,
+          }).from(usersTable)
+          .where(sql`${usersTable.id} = ANY(${sql.raw(`ARRAY[${challengeUserIds.map((id) => `'${id}'`).join(",")}]::uuid[]`)})`)
+        : Promise.resolve([]);
+    })(),
+  ]);
+
   const needsLinking = !user.leetcode_username || !user.codeforces_handle;
-  const challengeUserIds = Array.from(new Set(
-    [...pendingChallenges, ...activeChallenges].flatMap((c) => [c.challenger_id, c.opponent_id]),
-  ));
-  const challengeUsers = challengeUserIds.length > 0
-    ? await db
-      .select({
-        id: usersTable.id,
-        username: usersTable.username,
-        full_name: usersTable.full_name,
-        avatar_url: usersTable.avatar_url,
-      })
-      .from(usersTable)
-      .where(sql`${usersTable.id} = ANY(${sql.raw(`ARRAY[${challengeUserIds.map((id) => `'${id}'`).join(",")}]::uuid[]`)})`)
-    : [];
   const challengeUserMap = new Map(challengeUsers.map((challengeUser) => [challengeUser.id, challengeUser]));
   const pendingChallengeItems = pendingChallenges.map((challenge) => ({
     ...challenge,

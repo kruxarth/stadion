@@ -39,6 +39,13 @@ interface CfRatingChange {
   rank: number;
 }
 
+interface CfStandingsRow {
+  rank: number;
+  party: {
+    members: Array<{ handle: string }>;
+  };
+}
+
 // ─── Fetch user stats ─────────────────────────────────────────────────────────
 
 export async function fetchCodeforcesStats(
@@ -165,12 +172,45 @@ export async function fetchCodeforcesContestRankResult(
   handle: string,
   contestId: string,
 ): Promise<{ rank: number | null; unavailable: boolean }> {
-  const ratingHistory = await cfGet<CfRatingChange[]>(
-    `/user.rating?handle=${encodeURIComponent(handle)}`,
+  const results = await fetchCodeforcesContestRankResults([handle], contestId);
+  return results[handle] ?? { rank: null, unavailable: true };
+}
+
+export async function fetchCodeforcesContestRankResults(
+  handles: string[],
+  contestId: string,
+): Promise<Record<string, { rank: number | null; unavailable: boolean }>> {
+  const uniqueHandles = [...new Set(handles.map((handle) => handle.trim()).filter(Boolean))];
+  const fallback = Object.fromEntries(
+    uniqueHandles.map((handle) => [handle, { rank: null, unavailable: true }]),
+  ) as Record<string, { rank: number | null; unavailable: boolean }>;
+
+  if (uniqueHandles.length === 0) {
+    return fallback;
+  }
+
+  const encodedHandles = uniqueHandles.map((handle) => encodeURIComponent(handle)).join(";");
+  const standings = await cfGet<{ rows: CfStandingsRow[] }>(
+    `/contest.standings?contestId=${encodeURIComponent(contestId)}&handles=${encodedHandles}&showUnofficial=true`,
   );
 
-  if (!ratingHistory) return { rank: null, unavailable: true };
+  if (!standings) return fallback;
 
-  const entry = ratingHistory.find((c) => String(c.contestId) === contestId);
-  return { rank: entry?.rank ?? null, unavailable: false };
+  const byHandle = new Map<string, number>();
+
+  for (const row of standings.rows) {
+    for (const member of row.party.members) {
+      byHandle.set(member.handle, row.rank);
+    }
+  }
+
+  return Object.fromEntries(
+    uniqueHandles.map((handle) => [
+      handle,
+      {
+        rank: byHandle.get(handle) ?? null,
+        unavailable: false,
+      },
+    ]),
+  );
 }

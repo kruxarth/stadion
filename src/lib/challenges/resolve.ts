@@ -1,5 +1,5 @@
 import { and, eq, lt, or } from "drizzle-orm";
-import { fetchCodeforcesContestRankResult } from "@/lib/codeforces";
+import { fetchCodeforcesContestRankResults } from "@/lib/codeforces";
 import { db } from "@/lib/db";
 import { challenges, users } from "@/lib/db/schema";
 import { fetchLeetCodeContestRankResult } from "@/lib/leetcode";
@@ -140,10 +140,12 @@ async function resolveChallenge(challenge: PendingChallenge, now: Date) {
         return false;
       }
 
-      const [challengerResult, opponentResult] = await Promise.all([
-        fetchCodeforcesContestRankResult(challenger.codeforces_handle, challenge.contest_id),
-        fetchCodeforcesContestRankResult(opponent.codeforces_handle, challenge.contest_id),
-      ]);
+      const cfResults = await fetchCodeforcesContestRankResults(
+        [challenger.codeforces_handle, opponent.codeforces_handle],
+        challenge.contest_id,
+      );
+      const challengerResult = cfResults[challenger.codeforces_handle];
+      const opponentResult = cfResults[opponent.codeforces_handle];
 
       challengerRank = challengerResult.rank;
       opponentRank = opponentResult.rank;
@@ -163,6 +165,12 @@ async function resolveChallenge(challenge: PendingChallenge, now: Date) {
         `[resolve-challenges] ${challenge.id}: incomplete ranks for ${challenge.platform} - retrying until final cutoff`,
       );
       return false;
+    }
+
+    if (rankMissing) {
+      console.warn(
+        `[resolve-challenges] ${challenge.id}: final cutoff reached with incomplete ranks - resolving without winner`,
+      );
     }
 
     const winnerId = getWinnerId({
@@ -212,16 +220,8 @@ function getWinnerId({
   challengerRank: number | null;
   opponentRank: number | null;
 }) {
-  if (challengerRank === null && opponentRank === null) {
+  if (challengerRank === null || opponentRank === null) {
     return null;
-  }
-
-  if (challengerRank === null) {
-    return opponentId;
-  }
-
-  if (opponentRank === null) {
-    return challengerId;
   }
 
   if (challengerRank === opponentRank) {

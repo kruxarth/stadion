@@ -3,6 +3,9 @@ import { users, leetcodeStats } from "@/lib/db/schema";
 import { isNotNull } from "drizzle-orm";
 import { fetchLeetCodeStats } from "@/lib/leetcode";
 import { verifyCronAuth } from "@/lib/cronAuth";
+import { pMap } from "@/lib/concurrency";
+
+const CONCURRENCY = 10;
 
 export async function GET(request: Request) {
   if (!verifyCronAuth(request)) {
@@ -14,16 +17,15 @@ export async function GET(request: Request) {
     .from(users)
     .where(isNotNull(users.leetcode_username));
 
-  console.log(`[sync-leetcode] Processing ${allUsers.length} users`);
+  console.log(`[sync-leetcode] Processing ${allUsers.length} users (concurrency=${CONCURRENCY})`);
 
   let processed = 0;
 
-  for (const user of allUsers) {
-    // leetcode_username is guaranteed non-null by the WHERE clause
+  await pMap(allUsers, async (user) => {
     const stats = await fetchLeetCodeStats(user.leetcode_username!);
     if (!stats) {
       console.warn(`[sync-leetcode] No stats for ${user.leetcode_username}`);
-      continue;
+      return;
     }
 
     await db
@@ -51,11 +53,8 @@ export async function GET(request: Request) {
         },
       });
 
-    console.log(
-      `[sync-leetcode] ${user.leetcode_username}: rating=${stats.rating}, solved=${stats.problems_solved}`,
-    );
     processed++;
-  }
+  }, CONCURRENCY);
 
   console.log(`[sync-leetcode] Done. Processed ${processed}/${allUsers.length}`);
   return Response.json({ success: true, processed });

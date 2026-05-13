@@ -3,6 +3,9 @@ import { users } from "@/lib/db/schema";
 import { eq, isNotNull } from "drizzle-orm";
 import { verifyCronAuth } from "@/lib/cronAuth";
 import { deriveAcademicStatus, getAcademicStartYear } from "@/lib/academicYear";
+import { pMap } from "@/lib/concurrency";
+
+const CONCURRENCY = 20;
 
 export async function GET(request: Request) {
   if (!verifyCronAuth(request)) {
@@ -26,7 +29,7 @@ export async function GET(request: Request) {
 
   let updated = 0;
 
-  for (const user of enrolledUsers) {
+  await pMap(enrolledUsers, async (user) => {
     const status = deriveAcademicStatus({
       graduationYear: user.graduation_year,
       program: user.program,
@@ -37,7 +40,7 @@ export async function GET(request: Request) {
       user.college_year === status.collegeYear &&
       user.is_alumni === status.isAlumni
     ) {
-      continue;
+      return;
     }
 
     await db
@@ -50,7 +53,7 @@ export async function GET(request: Request) {
       .where(eq(users.id, user.id));
 
     updated++;
-  }
+  }, CONCURRENCY);
 
   console.log(
     `[check-alumni] Updated ${updated} academic statuses (academic_start_year=${academicStartYear})`,

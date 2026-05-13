@@ -44,41 +44,42 @@ export async function GET(request: Request) {
     return Response.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const results: CronStepResult[] = [];
+  console.log(`[daily-cron] Running ${CRON_STEPS.length} steps in parallel`);
 
-  for (const step of CRON_STEPS) {
-    try {
-      console.log(`[daily-cron] Running ${step.name}`);
-      const response = await step.run(request);
-      const body = await readResponseBody(response);
+  const results = await Promise.allSettled(
+    CRON_STEPS.map(async (step) => {
+      const start = Date.now();
+      try {
+        console.log(`[daily-cron] Running ${step.name}`);
+        const response = await step.run(request);
+        const body = await readResponseBody(response);
+        const elapsed = Date.now() - start;
 
-      results.push({
-        name: step.name,
-        ok: response.ok,
-        status: response.status,
-        body,
-      });
+        console.log(`[daily-cron] ${step.name} completed in ${elapsed}ms`);
 
-      if (!response.ok) {
-        console.error(`[daily-cron] ${step.name} failed with ${response.status}`, body);
+        if (!response.ok) {
+          console.error(`[daily-cron] ${step.name} failed with ${response.status}`, body);
+        }
+
+        return { name: step.name, ok: response.ok, status: response.status, body };
+      } catch (error) {
+        const message = error instanceof Error ? error.message : "Unknown error";
+        console.error(`[daily-cron] ${step.name} threw after ${Date.now() - start}ms`, error);
+        return { name: step.name, ok: false, status: 500, body: { error: message } };
       }
-    } catch (error) {
-      const message = error instanceof Error ? error.message : "Unknown error";
-      console.error(`[daily-cron] ${step.name} threw`, error);
+    }),
+  );
 
-      results.push({
-        name: step.name,
-        ok: false,
-        status: 500,
-        body: { error: message },
-      });
-    }
-  }
+  const stepResults: CronStepResult[] = results.map((r) =>
+    r.status === "fulfilled" ? r.value : { name: "unknown", ok: false, status: 500, body: { error: r.reason?.message ?? "Unknown" } },
+  );
 
-  const success = results.every((result) => result.ok);
+  const success = stepResults.every((r) => r.ok);
+
+  console.log(`[daily-cron] Done. ${stepResults.filter((r) => r.ok).length}/${stepResults.length} steps succeeded`);
 
   return Response.json(
-    { success, results },
+    { success, results: stepResults },
     { status: success ? 200 : 500 },
   );
 }

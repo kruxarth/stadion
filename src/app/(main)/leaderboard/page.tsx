@@ -5,7 +5,7 @@ import { getLeaderboard, type LeaderboardCategory } from "@/lib/queries/leaderbo
 import { LeaderboardControls } from "./_components/LeaderboardControls";
 import type { LeaderboardProgramFilter, LeaderboardYearFilter } from "@/lib/queries/leaderboard";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 30;
 
 export const metadata = { title: "Leaderboard — Stadion" };
 

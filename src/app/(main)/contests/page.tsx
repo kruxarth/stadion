@@ -47,14 +47,16 @@ export default async function ContestsPage() {
     if (user) {
       currentUserId = user.id;
 
-      await resolveEndedChallenges({ userId: user.id, limit: 10 });
-
-      activeChallenges = await db.select().from(challenges).where(
-        and(
-          or(eq(challenges.challenger_id, user.id), eq(challenges.opponent_id, user.id)),
-          eq(challenges.status, "accepted"),
+      const [, fetchedActiveChallenges] = await Promise.all([
+        resolveEndedChallenges({ userId: user.id, limit: 10 }),
+        db.select().from(challenges).where(
+          and(
+            or(eq(challenges.challenger_id, user.id), eq(challenges.opponent_id, user.id)),
+            eq(challenges.status, "accepted"),
+          ),
         ),
-      );
+      ]);
+      activeChallenges = fetchedActiveChallenges;
     }
   }
 

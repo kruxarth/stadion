@@ -8,7 +8,7 @@ const FEATURES = [
     icon: GitBranch,
     title: "GITHUB TRACKING",
     description:
-      "Weekly + monthly GitHub contributions, top languages, contribution heatmap. Auto-synced every 6 hours. No excuses.",
+      "Weekly + monthly GitHub contributions, top languages, contribution heatmap. Auto-synced every 24 hours. No excuses.",
     tag: "// CONTRIBUTIONS",
   },
   {

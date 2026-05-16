@@ -48,53 +48,44 @@ export async function fetchLeetCodeStats(
   username: string,
 ): Promise<LeetCodeUserStats | null> {
   try {
-    type ProblemData = {
+    type StatsData = {
       matchedUser: {
         submitStatsGlobal: {
           acSubmissionNum: Array<{ difficulty: string; count: number }>;
         };
       } | null;
-    };
-    type ContestData = {
       userContestRanking: {
         rating: number;
         attendedContestsCount: number;
       } | null;
     };
 
-    const [problemData, contestData] = await Promise.all([
-      gql<ProblemData>(
-        `query GetProblemStats($username: String!) {
+    const data = await gql<StatsData>(
+      `query GetLeetCodeStats($username: String!) {
           matchedUser(username: $username) {
             submitStatsGlobal {
               acSubmissionNum { difficulty count }
             }
           }
-        }`,
-        { username },
-      ),
-      gql<ContestData>(
-        `query GetContestRanking($username: String!) {
           userContestRanking(username: $username) {
             rating
             attendedContestsCount
           }
         }`,
-        { username },
-      ),
-    ]);
+      { username },
+    );
 
     // User doesn't exist on LeetCode
-    if (!problemData?.matchedUser) return null;
+    if (!data?.matchedUser) return null;
 
-    const acStats = problemData.matchedUser.submitStatsGlobal.acSubmissionNum;
+    const acStats = data.matchedUser.submitStatsGlobal.acSubmissionNum;
     const easy = acStats.find((s) => s.difficulty === "Easy")?.count ?? 0;
     const medium = acStats.find((s) => s.difficulty === "Medium")?.count ?? 0;
     const hard = acStats.find((s) => s.difficulty === "Hard")?.count ?? 0;
     const total =
       acStats.find((s) => s.difficulty === "All")?.count ?? easy + medium + hard;
 
-    const contest = contestData?.userContestRanking;
+    const contest = data.userContestRanking;
 
     return {
       rating: contest ? Math.round(contest.rating) : null,
